@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Datasets and generated indexes
+data/raw/
+data/processed/
+data/indexes/
+indexes/
+
+# Model weights and caches
+models/
+model_weights/
+.cache/
+.huggingface/
+
+# Generated experiment outputs
+results/
+logs/
+*.log
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

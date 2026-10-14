@@ -1,0 +1,19 @@
+project:
+  name: VERITAS
+  seed: 42
+
+paths:
+  results_dir: results
+
+logging:
+  level: INFO
+
+retrieval:
+  mode: hybrid
+  bm25_top_k: 50
+  dense_top_k: 50
+  rrf_constant: 60
+
+verification:
+  temperature: 0.1
+  abstain_label: Unverified
