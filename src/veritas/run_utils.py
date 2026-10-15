@@ -15,7 +15,8 @@ def start_run(
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     run_id = f"{timestamp}_{uuid4().hex[:8]}"
 
-    results_root = ROOT_DIR / config["paths"]["results_dir"]
+    results_dir_name = config.get("paths", {}).get("results_dir", "results") if isinstance(config, dict) else "results"
+    results_root = ROOT_DIR / results_dir_name
     run_dir = results_root / run_id
     run_dir.mkdir(parents=True, exist_ok=False)
 
@@ -30,8 +31,9 @@ def start_run(
     # Initialize logging for this run.
     log_file = run_dir / "run.log"
     logger = logging.getLogger("veritas")
+    level_str = config.get("logging", {}).get("level", "INFO") if isinstance(config, dict) else "INFO"
     logger.setLevel(
-        getattr(logging, config["logging"]["level"].upper(), logging.INFO)
+        getattr(logging, str(level_str).upper(), logging.INFO)
     )
     logger.handlers.clear()
     logger.propagate = False

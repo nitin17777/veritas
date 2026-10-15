@@ -1,0 +1,30 @@
+# VERITAS TF-IDF + Logistic Regression Baseline Configuration
+# All values here override the built-in defaults in scripts/train_tfidf_lr.py.
+
+paths:
+  results_dir: results
+
+logging:
+  level: INFO
+
+baseline_tfidf_lr:
+  dataset: liar
+  processed_dir: data/processed/liar
+  model_name: tfidf_lr
+
+  random_seed: 42   # fixed globally; never change for published runs
+
+  tfidf:
+    max_features: 100000      # vocabulary cap (words + bigrams)
+    ngram_min: 1              # minimum n-gram size
+    ngram_max: 2              # maximum n-gram size (unigrams + bigrams)
+    sublinear_tf: true        # apply 1 + log(tf) scaling
+
+  logistic_regression:
+    # C_values: candidate regularisation strengths swept on validation macro-F1.
+    # Do NOT include values tuned against test set.
+    C_values: [0.01, 0.1, 0.5, 1.0, 5.0, 10.0]
+    max_iter: 1000
+    solver: saga              # supports multinomial + L1/L2; good for large vocab
+    # class_weight is always "balanced" and is not configurable here
+    # to prevent accidental removal of the imbalance correction.

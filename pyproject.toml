@@ -8,8 +8,13 @@ version = "0.1.0"
 description = "Evidence-grounded AI fact verification"
 requires-python = ">=3.10"
 dependencies = [
-    "PyYAML==6.0.3"
+    "PyYAML==6.0.3",
+    "scikit-learn>=1.4",
+    "torch",
+    "transformers>=4.40",
+    "accelerate",
 ]
+
 
 [tool.setuptools.packages.find]
 where = ["src"]
