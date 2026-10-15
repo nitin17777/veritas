@@ -8,6 +8,12 @@ paths:
 logging:
   level: INFO
 
+data_prep:
+  raw_dir: data/raw
+  processed_dir: data/processed
+  datasets:
+    - liar
+
 retrieval:
   mode: hybrid
   bm25_top_k: 50
