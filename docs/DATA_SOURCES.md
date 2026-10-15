@@ -191,3 +191,60 @@ python -m veritas.data_prep.prepare --datasets rawfc averitec --approve-proposed
 ```pwsh
 pytest tests/data_prep -v
 ```
+
+---
+
+## Splitting and Evidence Leakage Filtering
+
+Module: `veritas.data_prep.splitter`
+
+### Overview
+
+| Function | Purpose |
+|---|---|
+| `assign_splits(records, ...)` | Assign train / validation / test / heldout_topic splits |
+| `filter_evidence_leakage(records, ...)` | Drop evidence published after the claim's fact-check date |
+| `save_splits(records, output_dir, ...)` | Write per-split JSONL files and a JSON audit report |
+
+### Design Constraints
+
+* **No claim appears in two splits.** Cross-split ID collisions are reported (and raise in strict mode).
+* **Reproducibility.** All randomness is controlled by `random_seed` (default 42). The same seed always produces the same splits.
+* **Official split preservation.** When all records carry valid `split` values and `preserve_official_splits=True` (default), the existing assignments are kept unchanged.
+* **Stratified assignment.** When official splits are absent, records are distributed proportionally by label (default 80 / 10 / 10 %).
+* **Topic hold-out.** At least one complete topic cluster is moved to `heldout_topic`. The chosen topic, its record count, and label distribution are reported.
+* **Deduplication policy.** Exact normalised-text duplicate claims are detected and reported; no records are silently removed. Fuzzy deduplication is out of scope.
+
+### Usage Examples
+
+```python
+from veritas.data_prep.splitter import assign_splits, filter_evidence_leakage, save_splits
+
+# 1. Assign splits (stratified, with automatic topic hold-out)
+records, split_report = assign_splits(
+    records,
+    dataset_id="rawfc",
+    heldout_topic="auto",
+    random_seed=42,
+)
+
+# 2. Filter evidence leakage (enabled by default)
+records, leak_stats = filter_evidence_leakage(records, enabled=True)
+
+# 3. Save JSONL outputs + audit report
+counts = save_splits(records, output_dir="data/processed/rawfc", report=split_report)
+print(counts)  # e.g. {'heldout_topic': 15, 'test': 123, 'train': 987, 'validation': 123}
+```
+
+### Running with the Leakage Filter Disabled
+
+```python
+records, leak_stats = filter_evidence_leakage(records, enabled=False)
+# leak_stats.evidence_dropped == 0 — all evidence retained
+```
+
+### Known Fact-Checker Domains
+
+`DEFAULT_FACT_CHECKER_DOMAINS` contains 14 domains (politifact.com, snopes.com, factcheck.org, etc.).
+Evidence from these domains is subject to the same date-based leakage rule as all other evidence;
+the gold `label` field is **never** removed.
