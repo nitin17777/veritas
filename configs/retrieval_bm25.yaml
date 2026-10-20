@@ -1,0 +1,23 @@
+# VERITAS BM25 Retrieval Configuration
+project:
+  name: VERITAS
+  seed: 42
+
+paths:
+  results_dir: results
+
+logging:
+  level: INFO
+
+retrieval:
+  backend: bm25
+  index_dir: data/indexes/bm25_default
+  bm25_top_k: 50
+  k1: 1.5
+  b: 0.75
+  chunk_size: 150
+  chunk_overlap: 20
+  datasets:
+    - rawfc
+    - averitec
+    - custom_recent

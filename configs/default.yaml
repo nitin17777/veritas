@@ -16,9 +16,19 @@ data_prep:
 
 retrieval:
   mode: hybrid
+  backend: bm25
+  index_dir: data/indexes/bm25_default
   bm25_top_k: 50
   dense_top_k: 50
   rrf_constant: 60
+  k1: 1.5
+  b: 0.75
+  chunk_size: 150
+  chunk_overlap: 20
+  datasets:
+    - rawfc
+    - averitec
+    - custom_recent
 
 verification:
   temperature: 0.1
