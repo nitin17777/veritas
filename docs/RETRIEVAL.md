@@ -142,9 +142,59 @@ for res in results:
 
 ---
 
-## 8. Test Suite
+## 8. Dense Retrieval with Sentence-Transformers & FAISS
+
+VERITAS implements dense semantic retrieval alongside lexical BM25 retrieval using `sentence-transformers` and `faiss.IndexFlatIP`.
+
+### 8.1 Key Properties
+- **Exact Cosine Similarity**: Embeddings are $L_2$-normalized (`normalize_embeddings=True`) and indexed using `faiss.IndexFlatIP`. For unit vectors, inner product equals cosine similarity.
+- **Configurable Encoders**: Supports any HuggingFace embedding checkpoint (default: `BAAI/bge-small-en-v1.5`, `intfloat/e5-small-v2`, `sentence-transformers/all-MiniLM-L6-v2`).
+- **Query Prefix Resolution**: Automatically attaches required prefixes:
+  - BGE models: `"Represent this sentence for searching relevant passages: "`
+  - E5 models: `"query: "` (queries) and `"passage: "` (documents)
+  - Other models: no prefix (`""`)
+- **Strict Positional Alignment**: Writes `passage_ids.json` as a separate ordered list mapping row index $i$ in FAISS directly to `PassageStore[i]`.
+- **CPU & CUDA Fallback**: Automatically leverages CUDA mixed precision when available, with clean CPU fallback.
+- **Fixture-Based Test Mode**: Provides `MockEmbedder` for instantaneous deterministic tests with zero model weight downloads.
+
+### 8.2 Configuration
+
+Configured via [configs/retrieval_dense.yaml](file:///e:/veritas/configs/retrieval_dense.yaml):
+
+```yaml
+retrieval:
+  backend: dense
+  index_dir: data/indexes/dense_default
+  model_name_or_path: "BAAI/bge-small-en-v1.5"
+  device: "auto"
+  batch_size: 32
+  normalize_embeddings: true
+  index_type: "IndexFlatIP"
+  dense_top_k: 50
+  datasets:
+    - rawfc
+    - averitec
+    - custom_recent
+```
+
+### 8.3 Building Dense Indexes
+
+Build index using the YAML configuration:
+```bash
+python scripts/build_dense_index.py --config configs/retrieval_dense.yaml
+```
+
+Run smoke-test mode with query:
+```bash
+python scripts/build_dense_index.py --smoke-test --query "vaccination hospitalizations"
+```
+
+---
+
+## 9. Test Suite
 
 Run the full retrieval test suite:
 ```bash
 pytest tests/retrieval/ -v
 ```
+

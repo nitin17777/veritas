@@ -6,3 +6,5 @@ torch
 transformers>=4.40
 accelerate
 rank-bm25>=0.2.2
+faiss-cpu>=1.8.0
+sentence-transformers>=3.0.0

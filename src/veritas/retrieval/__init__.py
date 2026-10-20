@@ -12,12 +12,23 @@ from veritas.retrieval.corpus import (
     build_corpus_from_records,
     create_synthetic_corpus,
 )
+from veritas.retrieval.dense import (
+    DenseEncoder,
+    DenseIndex,
+    DenseIndexMetadata,
+    MockEmbedder,
+    resolve_model_prefixes,
+)
 from veritas.retrieval.schema import IndexMetadata, Passage, SearchResult
 
 __all__ = [
     "BM25Index",
     "ChunkerConfig",
+    "DenseEncoder",
+    "DenseIndex",
+    "DenseIndexMetadata",
     "IndexMetadata",
+    "MockEmbedder",
     "Passage",
     "PassageStore",
     "SearchResult",
@@ -25,5 +36,6 @@ __all__ = [
     "build_corpus_from_records",
     "chunk_text",
     "create_synthetic_corpus",
+    "resolve_model_prefixes",
     "tokenize_bm25",
 ]

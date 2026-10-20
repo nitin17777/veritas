@@ -20,6 +20,8 @@ data/raw/
 data/processed/
 data/indexes/
 indexes/
+*.faiss
+*.index
 
 # Model weights and caches
 models/
