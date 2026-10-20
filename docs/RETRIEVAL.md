@@ -191,7 +191,81 @@ python scripts/build_dense_index.py --smoke-test --query "vaccination hospitaliz
 
 ---
 
-## 9. Test Suite
+---
+
+## 9. Hybrid Retrieval with Reciprocal Rank Fusion (P3)
+
+VERITAS combines lexical precision (BM25) and semantic generalization (Dense) using **Reciprocal Rank Fusion (RRF)**.
+
+### 9.1 Mathematical Specification
+
+For candidate passage $d$ retrieved across candidate lists $M$ (e.g. BM25 and Dense, or multiple query variations):
+
+$$\text{RRF}(d) = \sum_{m \in M} \frac{w_m}{k + \text{rank}_m(d)}$$
+
+Where:
+- $k$: RRF smoothing constant (default: `60`).
+- $\text{rank}_m(d) \ge 1$: 1-based rank of passage $d$ in the candidate list from method $m$.
+- $w_m$: Optional method weighting multiplier (default: $1.0$).
+
+### 9.2 Key Features
+- **Configurable Candidate Pools**: Retrieves top 50 BM25 and top 50 Dense candidates by default.
+- **Deduplication**: Identical passage IDs are consolidated during fusion, accumulating reciprocal rank weights across candidate lists.
+- **Multiple Query Support**: Supports query reformulations, sub-questions, and entity queries for a single claim.
+- **Traceable Attribution**: Fused results preserve `sources`, `source_ranks`, and original `source_scores`.
+- **Mode Switching**: Dynamically switch between `hybrid`, `bm25`, and `dense` without reloading indexes.
+
+### 9.3 Configuration
+
+Configured via [configs/retrieval_hybrid.yaml](file:///e:/veritas/configs/retrieval_hybrid.yaml) or [configs/default.yaml](file:///e:/veritas/configs/default.yaml):
+
+```yaml
+retrieval:
+  mode: hybrid
+  bm25:
+    backend: bm25
+    index_dir: data/indexes/bm25_default
+    bm25_top_k: 50
+    k1: 1.5
+    b: 0.75
+  dense:
+    backend: dense
+    index_dir: data/indexes/dense_default
+    model_name_or_path: "BAAI/bge-small-en-v1.5"
+    device: "auto"
+    batch_size: 32
+    normalize_embeddings: true
+    dense_top_k: 50
+  hybrid:
+    rrf_constant: 60
+    top_k: 50
+```
+
+---
+
+## 10. Retrieval Evaluation & Metrics
+
+Retrieval performance is evaluated using **Recall@k** and **nDCG@k** ($k \in [1, 5, 10, 20, 50]$):
+
+- **Recall@k**: Fraction of relevant gold evidence passages retrieved in the top $k$.
+- **nDCG@k**: Normalized Discounted Cumulative Gain reflecting rank sensitivity.
+- **Scientific Integrity Rule**: If gold evidence annotations are missing for a claim (such as LIAR), retrieval metrics are **not reported** for that claim, avoiding distortion of benchmark numbers.
+
+### 10.1 Running Retrieval Evaluation
+
+Fast smoke-test validation:
+```bash
+python scripts/evaluate_retrieval.py --smoke-test --mode hybrid
+```
+
+Evaluation over a dataset split:
+```bash
+python scripts/evaluate_retrieval.py --claims-file data/processed/rawfc/test.jsonl --mode hybrid --output-dir results/retrieval_rawfc_test
+```
+
+---
+
+## 11. Test Suite
 
 Run the full retrieval test suite:
 ```bash

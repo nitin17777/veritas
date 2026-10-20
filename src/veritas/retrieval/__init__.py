@@ -19,6 +19,13 @@ from veritas.retrieval.dense import (
     MockEmbedder,
     resolve_model_prefixes,
 )
+from veritas.retrieval.fusion import FusedSearchResult, reciprocal_rank_fusion
+from veritas.retrieval.hybrid import HybridRetriever
+from veritas.retrieval.metrics import (
+    compute_ndcg_at_k,
+    compute_recall_at_k,
+    evaluate_retrieval_predictions,
+)
 from veritas.retrieval.schema import IndexMetadata, Passage, SearchResult
 
 __all__ = [
@@ -27,6 +34,8 @@ __all__ = [
     "DenseEncoder",
     "DenseIndex",
     "DenseIndexMetadata",
+    "FusedSearchResult",
+    "HybridRetriever",
     "IndexMetadata",
     "MockEmbedder",
     "Passage",
@@ -35,7 +44,11 @@ __all__ = [
     "build_corpus_from_processed",
     "build_corpus_from_records",
     "chunk_text",
+    "compute_ndcg_at_k",
+    "compute_recall_at_k",
     "create_synthetic_corpus",
+    "evaluate_retrieval_predictions",
+    "reciprocal_rank_fusion",
     "resolve_model_prefixes",
     "tokenize_bm25",
 ]
