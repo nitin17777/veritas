@@ -1,0 +1,72 @@
+# VERITAS Phase 6 Evidence-Constrained LLM Verifier Configuration
+
+paths:
+  results_dir: results
+
+logging:
+  level: INFO
+
+verification:
+  # Model backend: 'mock', 'local' (Hugging Face Transformers), or 'api' (OpenAI / Anthropic / compatible)
+  backend: mock
+
+  # Model identifier
+  # For local: e.g. "meta-llama/Llama-3-8B-Instruct", "mistralai/Mistral-7B-Instruct-v0.3"
+  # For api: e.g. "gpt-4o-mini", "claude-3-5-haiku-20241022"
+  model: mock-model
+
+  # Sampling temperature: 0.0 for deterministic outputs
+  temperature: 0.0
+
+  # Maximum completion tokens to generate
+  max_tokens: 512
+
+  # Default label when evidence is insufficient, absent, or parsing fails
+  abstain_label: Unverified
+
+  # Minimum retrieval relevance score threshold; if all evidence scores fall below this,
+  # the verifier abstains with Unverified immediately without invoking the LLM.
+  # Set to null or a float (e.g. 0.05).
+  min_relevance_score: null
+
+  # Maximum number of retrieved passages to provide in the verification prompt
+  max_evidence_passages: 10
+
+  # Save raw model prompts, completions, and validation results to disk for replay and analysis
+  save_traces: true
+  trace_dir: results/verification_traces
+
+  # API configuration (when backend='api')
+  # Note: API keys must NEVER be hardcoded. Set via environment variable.
+  provider: openai
+  api_base: https://api.openai.com/v1
+  api_key_env_var: OPENAI_API_KEY
+  timeout: 60.0
+
+  # Local model options (when backend='local')
+  device: auto
+  torch_dtype: auto
+
+  # Label definitions defining exact criteria for all five VERITAS labels
+  label_definitions:
+    True: >-
+      The claim is directly and fully supported by trustworthy evidence.
+      All key assertions, factual details, figures, dates, and essential context
+      are substantiated by the provided evidence, with no material inaccuracies.
+    Partially True: >-
+      Core elements of the claim are supported by the evidence, but key aspects
+      are incomplete, exaggerated, missing important nuance or context, or accompanied
+      by minor inaccuracies.
+    Misleading: >-
+      The claim contains selective, out-of-context, or distorted facts that give
+      a false, deceptive, or unwarranted impression, even if isolated individual statements
+      may be technically real or derived from actual events.
+    False: >-
+      The central assertion of the claim is directly contradicted or refuted by
+      trustworthy evidence; the substantive statement did not happen, is factually incorrect,
+      or is fabricated.
+    Unverified: >-
+      The supplied evidence is insufficient, absent, conflicting, or inconclusive to verify
+      or refute the claim. CRITICAL: If the supplied evidence does not directly address
+      the specific claim, or lacks sufficient factual detail to establish truth or falsity,
+      you MUST return Unverified rather than guessing or extrapolating.
