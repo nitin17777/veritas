@@ -26,20 +26,34 @@ from veritas.retrieval.metrics import (
     compute_recall_at_k,
     evaluate_retrieval_predictions,
 )
+from veritas.retrieval.reranker import (
+    CrossEncoderProtocol,
+    CrossEncoderReranker,
+    MockCrossEncoder,
+    RerankResult,
+    RerankerConfig,
+    normalize_scores,
+    rerank_candidates,
+)
 from veritas.retrieval.schema import IndexMetadata, Passage, SearchResult
 
 __all__ = [
     "BM25Index",
     "ChunkerConfig",
+    "CrossEncoderProtocol",
+    "CrossEncoderReranker",
     "DenseEncoder",
     "DenseIndex",
     "DenseIndexMetadata",
     "FusedSearchResult",
     "HybridRetriever",
     "IndexMetadata",
+    "MockCrossEncoder",
     "MockEmbedder",
     "Passage",
     "PassageStore",
+    "RerankResult",
+    "RerankerConfig",
     "SearchResult",
     "build_corpus_from_processed",
     "build_corpus_from_records",
@@ -48,7 +62,9 @@ __all__ = [
     "compute_recall_at_k",
     "create_synthetic_corpus",
     "evaluate_retrieval_predictions",
+    "normalize_scores",
     "reciprocal_rank_fusion",
+    "rerank_candidates",
     "resolve_model_prefixes",
     "tokenize_bm25",
 ]

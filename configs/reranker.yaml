@@ -1,0 +1,38 @@
+# VERITAS Relevance Reranker Configuration (P4)
+#
+# IMPORTANT DISCLAIMER ON SCORE INTERPRETATION:
+# Normalized relevance scores produced by the cross-encoder reranker represent
+# monotonic relative ranking signals on a scale of [0.0, 1.0].
+# They are NOT calibrated frequentist or Bayesian probabilities and should NEVER
+# be interpreted as posterior probabilities that a claim or passage is true.
+
+reranker:
+  # Cross-encoder model identifier from Hugging Face or local directory
+  model_name: "cross-encoder/ms-marco-MiniLM-L-6-v2"
+
+  # Version tag or revision hash for run traceability
+  model_version: "1.0.0"
+
+  # Execution device ('auto', 'cpu', 'cuda')
+  device: "auto"
+
+  # Batch size for pair scoring inference
+  batch_size: 32
+
+  # Maximum token sequence length for (claim, passage) pair encoding
+  max_length: 512
+
+  # Default top-N candidate passages to retain after reranking (null returns all)
+  top_n: 10
+
+  # Normalization strategy:
+  # - 'sigmoid': 1 / (1 + exp(-s)) [default, preserves independent pairwise confidence]
+  # - 'minmax': (s - min) / (max - min) [relative batch rescaling]
+  # - 'softmax': exp(s_i) / sum(exp(s)) [distribution summing to 1.0]
+  # - 'none': clip raw scores to [0.0, 1.0]
+  normalization_method: "sigmoid"
+
+  # Deterministic tie-breaking strategy when scores are identical:
+  # - 'original': preserves order from the previous retrieval stage
+  # - 'passage_id': sorts ascending by string passage_id
+  tie_breaker: "original"
