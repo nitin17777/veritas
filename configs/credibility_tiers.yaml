@@ -1,0 +1,93 @@
+# =============================================================================
+# VERITAS Credibility Tier Table Configuration (P4)
+#
+# IMPORTANT DISCLAIMER ON OBJECTIVITY & PROVISIONAL STATUS:
+# ---------------------------------------------------------
+# The domain credibility tiers and assigned scores below are PROVISIONAL
+# heuristic approximations intended for research and system prototyping.
+#
+# They do NOT represent objective truth, authoritative judgments of journalistic
+# integrity, or absolute arbiters of factuality. Domain-level scoring carries
+# inherent limitations, including institutional bias, regional/linguistic bias,
+# and temporal lag (e.g., changes in ownership, editorial standards, or hijacked
+# domains).
+#
+# All scores and category assignments are subject to ongoing empirical
+# validation and should be audited and adjusted for specific operational contexts.
+# =============================================================================
+
+credibility:
+  # Explicit fallback score assigned to any domain not recognized in the table.
+  # PROVISIONAL: 0.50 represents an epistemic neutral prior.
+  unknown_domain_score: 0.50
+
+  # Ablation experiment toggle: when true, scores are assigned deterministically
+  # at random using the configured seed to assess sensitivity to credibility.
+  random_mode: false
+  random_seed: 42
+
+  # Tier definitions with provisional heuristic score assignments in [0.0, 1.0]
+  tiers:
+    tier_1:
+      # Institutional, academic, established primary fact-checkers, wire services
+      provisional_score: 0.90
+      description: "Primary wire agencies, international fact-checking signatories, public health institutes"
+      domains:
+        - "apnews.com"
+        - "reuters.com"
+        - "afp.com"
+        - "snopes.com"
+        - "politifact.com"
+        - "factcheck.org"
+        - "who.int"
+        - "cdc.gov"
+        - "nih.gov"
+        - "nature.com"
+        - "science.org"
+
+    tier_2:
+      # Established major news organizations with institutional editorial standards
+      provisional_score: 0.75
+      description: "Major national and international news outlets with corrections policies"
+      domains:
+        - "bbc.com"
+        - "bbc.co.uk"
+        - "nytimes.com"
+        - "washingtonpost.com"
+        - "theguardian.com"
+        - "wsj.com"
+        - "economist.com"
+        - "npr.org"
+        - "pbs.org"
+        - "bloomberg.com"
+        - "lemonde.fr"
+        - "dw.com"
+
+    tier_3:
+      # Regional news, commercial outlets, digital aggregators, specialist blogs
+      provisional_score: 0.50
+      description: "Regional outlets, commercial aggregators, niche journalism"
+      domains:
+        - "usatoday.com"
+        - "time.com"
+        - "newsweek.com"
+        - "huffpost.com"
+        - "vox.com"
+        - "theatlantic.com"
+        - "politico.com"
+        - "thehill.com"
+
+    tier_4:
+      # Highly partisan outlets, opinion-heavy commentary, tabloids, unverified platforms
+      provisional_score: 0.25
+      description: "Tabloids, partisan commentary, unverified blog networks"
+      domains:
+        - "dailymail.co.uk"
+        - "nypost.com"
+        - "thesun.co.uk"
+        - "breitbart.com"
+        - "dailycaller.com"
+        - "infowars.com"
+        - "thegatewaypundit.com"
+        - "rt.com"
+        - "sputniknews.com"

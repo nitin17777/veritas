@@ -1,0 +1,42 @@
+# =============================================================================
+# VERITAS P4 Combined Scoring Configuration
+#
+# Score formula:
+# combined = alpha * relevance + beta * credibility + gamma * temporal
+#
+# All component scores and the combined score are constrained to [0.0, 1.0].
+# =============================================================================
+
+scoring:
+  # Score combination weights (must sum to 1.0 or will be normalized)
+  weights:
+    alpha: 0.60   # Relevance weight
+    beta: 0.25    # Credibility weight
+    gamma: 0.15   # Temporal recency weight
+
+  # Ensure weights are automatically normalized: alpha + beta + gamma = 1.0
+  normalize_weights: true
+
+  # Temporal decay configuration: exp(-delta_days / tau)
+  temporal:
+    # Default decay parameter in days (provisional: 180 days ~ 6 months)
+    default_tau: 180.0
+
+    # Neutral fallback score used when either claim or evidence date is missing (default: 0.5)
+    neutral_score: 0.50
+
+    # Claim-type specific tau values (provisional heuristics)
+    tau_by_claim_type:
+      breaking: 14.0      # Fast-moving breaking events (decay rapidly)
+      election: 30.0      # Campaign statements and polls
+      politics: 90.0      # Political news & legislative statements
+      health: 365.0       # Medical & public health facts
+      science: 730.0      # Scientific findings (longer shelf life)
+      historical: 1825.0  # Historical & biographical claims
+
+  # Credibility configuration (references tier table)
+  credibility:
+    tier_config_path: "configs/credibility_tiers.yaml"
+    unknown_domain_score: 0.50
+    random_mode: false
+    random_seed: 42
