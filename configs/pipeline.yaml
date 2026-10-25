@@ -1,0 +1,46 @@
+"""VERITAS P8 pipeline configuration."""
+paths:
+  results_dir: results
+
+logging:
+  level: INFO
+
+pipeline:
+  retrieval_mode: bm25   # bm25 | dense | hybrid
+  retrieval_top_k: 10    # maximum passages passed to the verifier
+  save_verdicts: true    # append each Verdict to results/verdicts.jsonl
+
+retrieval:
+  mode: bm25
+  bm25:
+    index_dir: data/indexes/bm25_default
+    bm25_top_k: 50
+    k1: 1.5
+    b: 0.75
+    chunk_size: 150
+    chunk_overlap: 20
+  dense:
+    index_dir: data/indexes/dense_default
+    dense_top_k: 50
+    model_name_or_path: "BAAI/bge-small-en-v1.5"
+    device: "auto"
+    normalize_embeddings: true
+  hybrid:
+    rrf_constant: 60
+
+verification:
+  backend: mock         # mock | api | local (change to 'api' for production)
+  model: mock-model     # model identifier; ignored for mock backend
+  temperature: 0.0
+  max_tokens: 512
+  abstain_label: Unverified
+  min_relevance_score: null
+  max_evidence_passages: 10
+  save_traces: true
+  trace_dir: results/verification_traces
+
+  # API settings (backend='api') – API key MUST be set via env var, never here.
+  provider: openai
+  api_base: https://api.openai.com/v1
+  api_key_env_var: OPENAI_API_KEY
+  timeout: 60.0
