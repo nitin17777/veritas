@@ -1,0 +1,21 @@
+# VERITAS P5 Claim Extraction & Query Generation Configuration
+
+extraction:
+  # LLM backend: "mock" (unit tests/offline), "api" (OpenAI/Anthropic compatible), or "local" (Hugging Face)
+  backend: "mock"
+  model_name: "gpt-4o-mini"
+  prompt_version: "v1.0"
+
+  # Sampling parameters
+  temperature: 0.0
+  max_tokens: 1536
+  timeout_seconds: 30.0
+
+  # Extraction constraints
+  max_claims: 5
+  min_queries: 2
+  max_queries: 3
+
+  # Trace logging & observability
+  save_traces: false
+  trace_dir: "results/extraction_traces"
