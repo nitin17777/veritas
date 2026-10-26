@@ -1,0 +1,69 @@
+# =============================================================================
+# VERITAS Streamlit Demo Configuration (P11)
+# =============================================================================
+
+demo:
+  # Mode: 'benchmark' (local indexes / fixtures) or 'live_search' (web retrieval)
+  default_mode: "benchmark"
+  title: "VERITAS: Evidence-Grounded Fact Verification"
+  disclaimer: "VERITAS assists human judgment and does not guarantee factual correctness."
+
+  # Benchmark index paths
+  benchmark:
+    retrieval_mode: "hybrid"  # bm25 | dense | hybrid
+    bm25_index_dir: "data/indexes/bm25_default"
+    dense_index_dir: "data/indexes/dense_default"
+    top_k: 5
+
+  # Live web search configuration
+  live_search:
+    enabled: true
+    provider: "duckduckgo"    # duckduckgo | tavily | serpapi | mock
+    timeout_seconds: 10.0
+    max_results: 5
+    api_key_env_var: "SEARCH_API_KEY"
+
+  # Webpage extraction with Trafilatura
+  web_extraction:
+    enabled: true
+    use_trafilatura: true
+    timeout_seconds: 8.0
+    max_text_chars: 2500
+
+  # Automatic claim extraction for long text (articles, posts)
+  claim_extraction:
+    enabled: true
+    word_threshold: 30        # trigger P5 claim extraction if input > 30 words
+    max_claims: 5
+
+  # Verification settings forwarded to pipeline
+  verification:
+    backend: "mock"           # mock | api | local
+    model: "gpt-4o-mini"
+    temperature: 0.0
+    max_tokens: 512
+    prompt_mode: "evidence_constrained"
+    abstain_label: "Unverified"
+
+  # Scoring settings (CombinedScorer)
+  scoring:
+    weights:
+      alpha: 0.60
+      beta: 0.25
+      gamma: 0.15
+    normalize_weights: true
+    credibility:
+      tier_config_path: "configs/credibility_tiers.yaml"
+      unknown_domain_score: 0.50
+    temporal:
+      default_tau: 180.0
+      neutral_score: 0.50
+
+  # Faithfulness & Abstention Gate
+  faithfulness:
+    nli_model_name: "mock"
+    entailment_threshold: 0.50
+    min_confidence: 0.60
+    min_faithfulness: 0.70
+    mode: "abstain"
+    abstain_label: "Unverified"
