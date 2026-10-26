@@ -110,7 +110,7 @@ veritas/
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/<your-username>/veritas.git
+git clone https://github.com/nitin17777/veritas.git
 cd veritas
 
 # Create and activate a virtual environment
