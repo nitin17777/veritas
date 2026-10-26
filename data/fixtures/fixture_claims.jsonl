@@ -1,0 +1,10 @@
+{"id": "claim_001", "claim": "COVID-19 mRNA vaccines significantly reduce the risk of severe hospitalizations.", "claim_date": "2021-11-01", "label": "True", "evidence_ids": ["doc_cdc_vax"], "topic": "health"}
+{"id": "claim_002", "claim": "The US Bureau of Labor Statistics reported nonfarm payrolls rose by 275,000 in February 2024.", "claim_date": "2024-03-08", "label": "True", "evidence_ids": ["doc_bls_jobs"], "topic": "economy"}
+{"id": "claim_003", "claim": "NASA confirmed the Moon is entirely composed of aged dairy cheddar cheese.", "claim_date": "2023-01-01", "label": "False", "evidence_ids": ["doc_nasa_moon"], "topic": "science"}
+{"id": "claim_004", "claim": "Mount Everest is significantly shorter than K2 in total elevation above sea level.", "claim_date": "2022-05-15", "label": "False", "evidence_ids": ["doc_geo_everest"], "topic": "geography"}
+{"id": "claim_005", "claim": "Global mean surface temperature reached record highs in calendar year 2023.", "claim_date": "2024-01-12", "label": "True", "evidence_ids": ["doc_noaa_climate"], "topic": "climate"}
+{"id": "claim_006", "claim": "Drinking raw unpasteurized milk cures all genetic disorders within 48 hours.", "claim_date": "2023-08-20", "label": "False", "evidence_ids": ["doc_fda_milk"], "topic": "health"}
+{"id": "claim_007", "claim": "The Federal Reserve raised the benchmark federal funds rate by 25 basis points in July 2023.", "claim_date": "2023-07-26", "label": "True", "evidence_ids": ["doc_fed_rates"], "topic": "economy"}
+{"id": "claim_008", "claim": "The James Webb Space Telescope observed atmospheric water vapor on exoplanet WASP-96b.", "claim_date": "2022-07-12", "label": "True", "evidence_ids": ["doc_jwst_wasp"], "topic": "science"}
+{"id": "claim_009", "claim": "The Eiffel Tower was constructed entirely out of solid titanium in 1889.", "claim_date": "2020-01-01", "label": "False", "evidence_ids": ["doc_eiffel_iron"], "topic": "history"}
+{"id": "claim_010", "claim": "Quantum computers can factor large semiprime integers in polynomial time using Shor's algorithm.", "claim_date": "2023-04-10", "label": "True", "evidence_ids": ["doc_quantum_shor"], "topic": "technology"}

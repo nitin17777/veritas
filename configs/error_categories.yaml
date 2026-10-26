@@ -1,0 +1,114 @@
+# =============================================================================
+# VERITAS Error Analysis Taxonomy and Annotation Guidelines
+# =============================================================================
+
+version: "1.0"
+taxonomy_name: "VERITAS-Error-Taxonomy-v1"
+
+# Canonical error categories supported by VERITAS
+categories:
+  - id: "retrieval_miss"
+    name: "Retrieval miss"
+    description: >
+      The retrieval subsystem failed to return the necessary factual evidence passages
+      required to substantiate or refute the claim. Gold evidence was omitted, or all
+      retrieved candidates are irrelevant or tangential.
+    diagnostic_heuristic: >
+      Gold evidence IDs are not present in retrieved_passage_ids, or retrieved_passages is empty,
+      or max passage relevance score is below the relevance threshold.
+    actionable_remedy: >
+      Improve query decomposition, add synonym expansion, tune dense embedder fine-tuning,
+      or expand corpus coverage.
+
+  - id: "incorrect_credibility_ranking"
+    name: "Incorrect credibility ranking"
+    description: >
+      Sufficient evidence was retrieved, but the evidence scoring layer down-ranked trustworthy
+      authoritative sources below low-credibility or questionable domains, causing the verifier
+      to rely on flawed or incomplete context.
+    diagnostic_heuristic: >
+      A Tier 1/2 authoritative passage with relevant content was ranked lower than Tier 4/5 or
+      unknown domain passages, or domain credibility weight (beta) caused re-ranking distortion.
+    actionable_remedy: >
+      Calibrate credibility weights (beta), update domain tier tables, or adjust normalization.
+
+  - id: "stale_temporally_inappropriate"
+    name: "Stale or temporally inappropriate evidence"
+    description: >
+      The retrieved evidence was factually accurate at its publication time, but is outdated
+      relative to the claim date, or pertains to an earlier/later event, leading to temporal
+      misalignment.
+    diagnostic_heuristic: >
+      Large delta between claim_date and evidence_date (e.g. delta > 365 days for fast-moving claims),
+      or temporal scoring failed to penalize stale information.
+    actionable_remedy: >
+      Tune temporal decay parameter (tau) by claim domain, enforce temporal filtering or
+      date-conditioned retrieval queries.
+
+  - id: "llm_misinterpretation"
+    name: "LLM misinterpretation"
+    description: >
+      The evidence set contained the necessary facts, but the LLM verifier misread, hallucinated,
+      extrapolated beyond the text, misunderstood negation or nuance, or reasoned incorrectly.
+    diagnostic_heuristic: >
+      Retrieved evidence contains sufficient factual basis matching gold label, but verifier
+      produced an opposite or divergent verdict with flawed reasoning in explanation.
+    actionable_remedy: >
+      Refine prompt instructions, introduce few-shot exemplars of nuanced reasoning, or upgrade
+      the underlying reasoning model.
+
+  - id: "label_noise_ambiguous_annotation"
+    name: "Label noise or ambiguous annotation"
+    description: >
+      The ground-truth benchmark label itself is controversial, outdated, ambiguous, or incorrect
+      according to high-quality external evidence.
+    diagnostic_heuristic: >
+      Human inspection confirms the claim is subjective, multifaceted, or the benchmark gold label
+      disagrees with authoritative consensus.
+    actionable_remedy: >
+      Flag claim for dataset audit, mark as noisy sample, or exclude from clean evaluation splits.
+
+  - id: "parsing_failure"
+    name: "Parsing failure"
+    description: >
+      The model failed to produce valid JSON adhering to the VERITAS output schema even after
+      the automated retry mechanism, forcing an unverified fallback.
+    diagnostic_heuristic: >
+      Field 'parse_failed' is True, or raw output is not parseable JSON.
+    actionable_remedy: >
+      Strengthen JSON enforcement, adjust temperature, or refine the retry prompt template.
+
+  - id: "other_unknown"
+    name: "Other / unknown"
+    description: >
+      The root cause of failure cannot be attributed to the standard categories above and requires
+      further investigation.
+    diagnostic_heuristic: >
+      Unusual internal error, edge case in claim text, or ambiguous interaction between multiple stages.
+    actionable_remedy: >
+      Document in annotator notes for qualitative review.
+
+annotation_fields:
+  annotated_category:
+    type: string
+    allowed_values:
+      - "Retrieval miss"
+      - "Incorrect credibility ranking"
+      - "Stale or temporally inappropriate evidence"
+      - "LLM misinterpretation"
+      - "Label noise or ambiguous annotation"
+      - "Parsing failure"
+      - "Other / unknown"
+    required: true
+  annotator_id:
+    type: string
+    description: "Identifier or username of the human reviewer"
+    required: false
+  annotator_notes:
+    type: string
+    description: "Detailed human reasoning justifying the assigned category"
+    required: false
+  verification_status:
+    type: string
+    allowed_values: ["unreviewed", "in_review", "verified", "disputed"]
+    default: "unreviewed"

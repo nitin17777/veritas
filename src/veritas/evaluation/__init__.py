@@ -24,6 +24,16 @@ from veritas.evaluation.retrieval_metrics import (
     evaluate_retrieval_batch,
 )
 
+from veritas.evaluation.error_analysis import (
+    ERROR_CATEGORIES,
+    ErrorRecord,
+    compute_error_statistics,
+    export_errors_to_csv,
+    extract_prediction_errors,
+    generate_error_summary_report,
+    load_annotations_from_csv,
+)
+
 __all__ = [
     "EvaluationDataError",
     "STANDARD_LABEL_ORDER",
@@ -42,4 +52,11 @@ __all__ = [
     "build_evaluation_report",
     "format_console_report",
     "save_report_artifacts",
+    "ERROR_CATEGORIES",
+    "ErrorRecord",
+    "extract_prediction_errors",
+    "export_errors_to_csv",
+    "load_annotations_from_csv",
+    "compute_error_statistics",
+    "generate_error_summary_report",
 ]
