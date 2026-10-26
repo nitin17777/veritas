@@ -1,4 +1,4 @@
-# VERITAS — Evidence-Grounded RAG + LLM Fact Verification
+# VERITAS - Evidence-Grounded RAG + LLM Fact Verification
 
 > **V**erification through **E**vidence **R**etrieval, **I**nterpretation, **T**emporal **A**nalysis, and **S**ource-credibility scoring.
 
@@ -217,7 +217,7 @@ python scripts/summarize_errors.py \
 
 ## Configuration
 
-All behaviour is driven by YAML files — no hard-coded paths or secrets.
+All behaviour is driven by YAML files - no hard-coded paths or secrets.
 
 | File | Purpose |
 |------|---------|
