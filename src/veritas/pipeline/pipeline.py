@@ -57,6 +57,8 @@ from veritas.retrieval.schema import Passage, SearchResult
 from veritas.verification.llm_client import BaseLLMClient, TraceRecorder, create_llm_client
 from veritas.verification.parse import VerificationResult
 from veritas.verification.verify import EvidenceConstrainedVerifier, VerifierConfig
+from veritas.scoring.combine import CombinedScorer, CombinedScorerConfig
+from veritas.faithfulness.abstain import AbstentionGate, AbstentionConfig
 
 logger = logging.getLogger("veritas.pipeline")
 
@@ -159,6 +161,8 @@ class PipelineConfig:
     dense_top_k: int = 50
     rrf_k: int = 60
     verification: dict[str, Any] = field(default_factory=dict)
+    scoring: dict[str, Any] = field(default_factory=dict)
+    faithfulness: dict[str, Any] = field(default_factory=dict)
     results_dir: str = "results"
     save_verdicts: bool = True
 
@@ -166,12 +170,14 @@ class PipelineConfig:
     def from_dict(cls, raw: dict[str, Any]) -> PipelineConfig:
         """Build PipelineConfig from a raw YAML-loaded mapping.
 
-        Handles both flat configurations and those with nested ``retrieval``
-        and ``verification`` sections.
+        Handles both flat configurations and those with nested ``retrieval``,
+        ``verification``, ``scoring``, and ``faithfulness`` sections.
         """
         r = raw.get("retrieval", {})
         v = raw.get("verification", {})
         p = raw.get("pipeline", {})
+        s = raw.get("scoring", {})
+        f = raw.get("faithfulness", raw.get("abstention", {}))
         paths = raw.get("paths", {})
         return cls(
             retrieval_mode=str(
@@ -188,6 +194,8 @@ class PipelineConfig:
             dense_top_k=int(r.get("dense", {}).get("dense_top_k", 50)),
             rrf_k=int(r.get("hybrid", {}).get("rrf_constant", 60)),
             verification=dict(v),
+            scoring=dict(s),
+            faithfulness=dict(f),
             results_dir=str(paths.get("results_dir", p.get("results_dir", "results"))),
             save_verdicts=bool(p.get("save_verdicts", True)),
         )
@@ -222,6 +230,10 @@ class VeritasPipeline:
     llm_client:
         Pre-built ``BaseLLMClient``.  If *None* a client is created from
         ``config.verification``.
+    combined_scorer:
+        Optional pre-built ``CombinedScorer`` for evidence re-ranking.
+    abstention_gate:
+        Optional pre-built ``AbstentionGate`` for NLI-based faithfulness & abstention.
     """
 
     def __init__(
@@ -229,6 +241,8 @@ class VeritasPipeline:
         config: PipelineConfig | dict[str, Any] | str | Path | None = None,
         retriever: HybridRetriever | None = None,
         llm_client: BaseLLMClient | None = None,
+        combined_scorer: CombinedScorer | None = None,
+        abstention_gate: AbstentionGate | None = None,
     ) -> None:
         # Resolve config
         if config is None:
@@ -243,6 +257,8 @@ class VeritasPipeline:
         # Resolve retriever
         if retriever is not None:
             self.retriever = retriever
+        elif self.config.retrieval_mode.lower() in ("none", "llm_only", "disabled"):
+            self.retriever = None
         else:
             self.retriever = self._load_retriever()
 
@@ -252,6 +268,30 @@ class VeritasPipeline:
             config=verifier_cfg,
             client=llm_client,
         )
+
+        # Resolve scoring
+        if combined_scorer is not None:
+            self.combined_scorer = combined_scorer
+        elif self.config.scoring:
+            try:
+                self.combined_scorer = CombinedScorer(self.config.scoring)
+            except Exception as exc:
+                logger.warning("Could not initialize CombinedScorer: %s", exc)
+                self.combined_scorer = None
+        else:
+            self.combined_scorer = None
+
+        # Resolve abstention gate
+        if abstention_gate is not None:
+            self.abstention_gate = abstention_gate
+        elif self.config.faithfulness:
+            try:
+                self.abstention_gate = AbstentionGate(self.config.faithfulness)
+            except Exception as exc:
+                logger.warning("Could not initialize AbstentionGate: %s", exc)
+                self.abstention_gate = None
+        else:
+            self.abstention_gate = None
 
         # Verdict output path
         results_root = Path(self.config.results_dir)
@@ -330,6 +370,8 @@ class VeritasPipeline:
 
     def _retrieve(self, queries: list[str]) -> list[FusedSearchResult]:
         """Run the configured retrieval backend and return ranked candidates."""
+        if self.config.retrieval_mode.lower() in ("none", "llm_only", "disabled") or self.retriever is None:
+            return []
         try:
             return self.retriever.retrieve(queries, top_k=self.config.retrieval_top_k)
         except RuntimeError as exc:
@@ -340,20 +382,28 @@ class VeritasPipeline:
     def _rank_evidence(
         self,
         candidates: list[FusedSearchResult],
+        claim_date: str | None = None,
     ) -> list[FusedSearchResult]:
-        """Rank and gate evidence candidates before verification.
+        """Rank and gate evidence candidates before verification."""
+        if not candidates or self.combined_scorer is None:
+            return candidates
 
-        Current strategy: preserve retrieval rank order (already sorted by
-        RRF / BM25 / cosine score descending).  The verifier's own
-        ``min_relevance_score`` gate in ``EvidenceConstrainedVerifier`` applies
-        the relevance threshold, so no additional filtering is done here.
-
-        NOTE: A learned cross-encoder re-ranker (e.g. a monoBERT or a
-        cross-encoder/ms-marco-MiniLM) would replace or extend this method.
-        Until such a module exists this function is a clearly documented
-        identity pass-through.
-        """
-        return candidates  # identity: ranking already from retrieval layer
+        try:
+            scored = self.combined_scorer.score_candidates(candidates, claim_date=claim_date)
+            reordered: list[FusedSearchResult] = []
+            for sc in scored:
+                fused = FusedSearchResult(
+                    passage_id=sc.passage_id,
+                    score=float(sc.combined_score),
+                    rank=int(sc.rank),
+                    passage=sc.passage,
+                    sources=["combined_scorer"],
+                )
+                reordered.append(fused)
+            return reordered
+        except Exception as exc:
+            logger.warning("Combined scoring failed (%s). Preserving original ranking.", exc)
+            return candidates
 
     def _make_retrieved_passage_records(
         self,
@@ -439,7 +489,7 @@ class VeritasPipeline:
 
         # ---- Stage 3: Evidence ranking ---------------------------------
         t0 = time.perf_counter()
-        ranked = self._rank_evidence(candidates)
+        ranked = self._rank_evidence(candidates, claim_date=claim_date)
         stage_timings["evidence_ranking"] = round(time.perf_counter() - t0, 4)
 
         retrieved_records = self._make_retrieved_passage_records(ranked)
@@ -491,6 +541,16 @@ class VeritasPipeline:
             run_id=run_id,
         )
 
+        # ---- Stage 6: Faithfulness & Abstention Gate (if configured) ---
+        if self.abstention_gate is not None:
+            t0 = time.perf_counter()
+            try:
+                verdict, _ = self.abstention_gate.evaluate_verdict(verdict)
+            except Exception as exc:
+                logger.warning("Abstention gate evaluation failed: %s", exc)
+            stage_timings["faithfulness_abstention"] = round(time.perf_counter() - t0, 4)
+            verdict.stage_timings_s["faithfulness_abstention"] = stage_timings["faithfulness_abstention"]
+
         self._save_verdict(verdict)
         logger.info(
             "claim_id=%s | label=%s | confidence=%.2f | parse_failed=%s",
@@ -509,6 +569,8 @@ def verify(
     cfg: PipelineConfig | dict[str, Any] | str | Path | None = None,
     retriever: HybridRetriever | None = None,
     llm_client: BaseLLMClient | None = None,
+    combined_scorer: CombinedScorer | None = None,
+    abstention_gate: AbstentionGate | None = None,
     claim_id: str | None = None,
 ) -> Verdict:
     """Convenience wrapper: construct a one-shot ``VeritasPipeline`` and verify.
@@ -520,5 +582,11 @@ def verify(
     For batch use or when you need to share an index across many claims,
     construct ``VeritasPipeline`` directly.
     """
-    pipeline = VeritasPipeline(config=cfg, retriever=retriever, llm_client=llm_client)
+    pipeline = VeritasPipeline(
+        config=cfg,
+        retriever=retriever,
+        llm_client=llm_client,
+        combined_scorer=combined_scorer,
+        abstention_gate=abstention_gate,
+    )
     return pipeline.verify(claim=claim, claim_date=claim_date, claim_id=claim_id)

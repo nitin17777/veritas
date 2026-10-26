@@ -1,0 +1,54 @@
+# =============================================================================
+# RQ7: Abstention Gate Enabled Experiment
+# Enforces NLI-based faithfulness and confidence thresholds with conservative abstention.
+# =============================================================================
+
+experiment:
+  name: rq7_abstention
+  research_question: RQ7
+  description: "Faithfulness checking with active abstention downgrade (min_conf=0.6, min_faith=0.7)"
+  comparison_factor: "abstention_policy"
+  factor_value: "abstain"
+  seed: 42
+  version: "1.0"
+
+dataset:
+  name: liar
+  version: "v1.0"
+  split: test
+  path: data/processed/liar_test.jsonl
+
+paths:
+  results_dir: results/experiments
+
+pipeline:
+  retrieval_mode: bm25
+  retrieval_top_k: 10
+  save_verdicts: true
+
+retrieval:
+  mode: bm25
+  bm25:
+    index_dir: data/indexes/bm25_default
+    bm25_top_k: 50
+
+verification:
+  backend: mock
+  model: mock-model
+  temperature: 0.0
+  max_tokens: 512
+  prompt_mode: evidence_constrained
+  abstain_label: Unverified
+  save_traces: true
+
+faithfulness:
+  nli_model_name: mock
+  entailment_threshold: 0.5
+  min_confidence: 0.60
+  min_faithfulness: 0.70
+  mode: abstain
+  abstain_label: Unverified
+
+smoke_test:
+  enabled: false
+  max_claims: 20

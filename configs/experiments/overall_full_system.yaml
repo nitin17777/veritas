@@ -1,0 +1,75 @@
+# =============================================================================
+# Overall Comparison: Full VERITAS System
+# Hybrid retrieval + Credibility + Temporal scoring + Evidence constraint + Abstention
+# =============================================================================
+
+experiment:
+  name: overall_full_system
+  research_question: Overall
+  description: "Full VERITAS system with all modules active"
+  comparison_factor: "architecture"
+  factor_value: "full_system"
+  seed: 42
+  version: "1.0"
+
+dataset:
+  name: liar
+  version: "v1.0"
+  split: test
+  path: data/processed/liar_test.jsonl
+
+paths:
+  results_dir: results/experiments
+
+pipeline:
+  retrieval_mode: hybrid
+  retrieval_top_k: 10
+  save_verdicts: true
+
+retrieval:
+  mode: hybrid
+  bm25:
+    index_dir: data/indexes/bm25_default
+    bm25_top_k: 50
+  dense:
+    index_dir: data/indexes/dense_default
+    dense_top_k: 50
+  hybrid:
+    rrf_constant: 60
+
+scoring:
+  weights:
+    alpha: 0.60
+    beta: 0.25
+    gamma: 0.15
+  normalize_weights: true
+  credibility:
+    tier_config_path: "configs/credibility_tiers.yaml"
+    unknown_domain_score: 0.50
+    random_mode: false
+    random_seed: 42
+  temporal:
+    default_tau: 180.0
+    neutral_score: 0.50
+
+verification:
+  backend: mock
+  model: mock-model
+  temperature: 0.0
+  max_tokens: 512
+  prompt_mode: evidence_constrained
+  allow_no_evidence: false
+  abstain_label: Unverified
+  save_traces: true
+
+faithfulness:
+  nli_model_name: mock
+  entailment_threshold: 0.5
+  min_confidence: 0.60
+  min_faithfulness: 0.70
+  mode: abstain
+  abstain_label: Unverified
+
+smoke_test:
+  enabled: false
+  max_claims: 20

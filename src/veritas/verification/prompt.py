@@ -169,6 +169,49 @@ TASK INSTRUCTIONS:
     return prompt.strip()
 
 
+def build_free_verification_prompt(
+    claim: str,
+    evidence_items: list[dict[str, Any]] | None = None,
+    claim_date: str | None = None,
+    label_definitions: dict[str, str] | None = None,
+) -> str:
+    """Construct an unconstrained user prompt (free prompt) for claim verification.
+
+    Unlike the evidence-constrained prompt, this prompt allows the model to leverage
+    its general world knowledge, without enforcing a closed-world evidence constraint.
+
+    Args:
+        claim: Statement to verify.
+        evidence_items: Optional evidence passages.
+        claim_date: Optional temporal context (ISO date string).
+        label_definitions: Optional custom label definitions.
+
+    Returns:
+        Rendered prompt string for free/unconstrained verification.
+    """
+    claim_text = claim.strip()
+    date_context = f"\nClaim Date: {claim_date.strip()}" if claim_date and claim_date.strip() else ""
+
+    evidence_section = ""
+    if evidence_items:
+        evidence_text = format_evidence_block(evidence_items)
+        evidence_section = f"\n\nBACKGROUND EVIDENCE (FOR REFERENCE ONLY):\n{evidence_text}\n"
+
+    prompt = f"""CLAIM TO VERIFY:
+"{claim_text}"{date_context}{evidence_section}
+
+TASK INSTRUCTIONS:
+1. Assess the truthfulness of the claim based on your general knowledge and any reference material above.
+2. Select one of the 5 allowed labels: "True", "Partially True", "Misleading", "False", "Unverified".
+3. Provide a confidence score in the closed interval [0.0, 1.0].
+4. In `evidence_ids`, list any evidence IDs used, or an empty list [] if based on parametric knowledge.
+5. In `explanation`, provide a clear, concise explanation justifying your verdict.
+6. Return ONLY the raw JSON object with keys "label", "confidence", "evidence_ids", and "explanation". Do not add any conversational text or markdown code fences."""
+
+    return prompt.strip()
+
+
+
 def build_retry_prompt(
     original_prompt: str,
     raw_response: str,

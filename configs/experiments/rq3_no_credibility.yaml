@@ -1,0 +1,60 @@
+# =============================================================================
+# RQ3: No Credibility Scoring Experiment (beta = 0.0)
+# =============================================================================
+
+experiment:
+  name: rq3_no_credibility
+  research_question: RQ3
+  description: "Evidence ranking without domain credibility weighting (beta=0.0)"
+  comparison_factor: "credibility_mode"
+  factor_value: "none"
+  seed: 42
+  version: "1.0"
+
+dataset:
+  name: liar
+  version: "v1.0"
+  split: test
+  path: data/processed/liar_test.jsonl
+
+paths:
+  results_dir: results/experiments
+
+pipeline:
+  retrieval_mode: bm25
+  retrieval_top_k: 10
+  save_verdicts: true
+
+retrieval:
+  mode: bm25
+  bm25:
+    index_dir: data/indexes/bm25_default
+    bm25_top_k: 50
+
+scoring:
+  weights:
+    alpha: 0.85
+    beta: 0.00
+    gamma: 0.15
+  normalize_weights: true
+  credibility:
+    tier_config_path: "configs/credibility_tiers.yaml"
+    unknown_domain_score: 0.50
+    random_mode: false
+    random_seed: 42
+  temporal:
+    default_tau: 180.0
+    neutral_score: 0.50
+
+verification:
+  backend: mock
+  model: mock-model
+  temperature: 0.0
+  max_tokens: 512
+  prompt_mode: evidence_constrained
+  abstain_label: Unverified
+  save_traces: true
+
+smoke_test:
+  enabled: false
+  max_claims: 20

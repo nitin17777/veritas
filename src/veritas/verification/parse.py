@@ -210,11 +210,11 @@ def validate_confidence(confidence_raw: Any) -> float:
 
 def validate_evidence_ids(
     evidence_ids_raw: Any,
-    supplied_evidence_ids: set[str] | list[str],
+    supplied_evidence_ids: set[str] | list[str] | None = None,
 ) -> list[str]:
     """Validate that evidence_ids is a list and contains ONLY supplied IDs.
 
-    Requirement 5: Reject evidence IDs that were not supplied.
+    If supplied_evidence_ids is None, citations are unconstrained (free prompt mode).
     """
     if evidence_ids_raw is None:
         return []
@@ -223,6 +223,16 @@ def validate_evidence_ids(
         raise VerificationValidationError(
             f"Field 'evidence_ids' must be a list of strings, got {type(evidence_ids_raw).__name__}."
         )
+
+    if supplied_evidence_ids is None:
+        seen_unconstrained: set[str] = set()
+        deduped_unconstrained: list[str] = []
+        for item in evidence_ids_raw:
+            eid = str(item).strip()
+            if eid and eid not in seen_unconstrained:
+                seen_unconstrained.add(eid)
+                deduped_unconstrained.append(eid)
+        return deduped_unconstrained
 
     supplied_set = {str(eid).strip() for eid in supplied_evidence_ids}
     cleaned_ids: list[str] = []

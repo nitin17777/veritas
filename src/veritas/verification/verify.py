@@ -29,6 +29,7 @@ from veritas.verification.parse import (
 )
 from veritas.verification.prompt import (
     DEFAULT_LABEL_DEFINITIONS,
+    build_free_verification_prompt,
     build_retry_prompt,
     build_system_prompt,
     build_verification_prompt,
@@ -53,6 +54,8 @@ class VerifierConfig:
     label_definitions: dict[str, str] = field(
         default_factory=lambda: dict(DEFAULT_LABEL_DEFINITIONS)
     )
+    prompt_mode: str = "evidence_constrained"  # "evidence_constrained" or "free"
+    allow_no_evidence: bool = False
     api_base: str = "https://api.openai.com/v1"
     api_key_env_var: str = "OPENAI_API_KEY"
     api_key: str | None = None
@@ -80,6 +83,8 @@ class VerifierConfig:
             label_definitions=dict(
                 v_data.get("label_definitions", DEFAULT_LABEL_DEFINITIONS)
             ),
+            prompt_mode=str(v_data.get("prompt_mode", "evidence_constrained")),
+            allow_no_evidence=bool(v_data.get("allow_no_evidence", False)),
             api_base=str(v_data.get("api_base", "https://api.openai.com/v1")),
             api_key_env_var=str(v_data.get("api_key_env_var", "OPENAI_API_KEY")),
             api_key=v_data.get("api_key"),
@@ -247,7 +252,9 @@ class EvidenceConstrainedVerifier:
 
         # 1. Relevance and evidence check (Requirement 8)
         valid_evidence, reject_reason = self._filter_and_check_evidence(evidence)
-        if reject_reason is not None:
+        can_proceed_without_evidence = self.config.allow_no_evidence or (self.config.prompt_mode == "free")
+
+        if reject_reason is not None and not can_proceed_without_evidence:
             logger.info("Verification abstained without LLM call: %s", reject_reason)
             return VerificationResult(
                 label=self.config.abstain_label,
@@ -258,14 +265,25 @@ class EvidenceConstrainedVerifier:
             )
 
         supplied_ids = [item["id"] for item in valid_evidence]
+        is_free_prompt = self.config.prompt_mode == "free"
 
         # 2. Build initial user prompt
-        user_prompt = build_verification_prompt(
-            claim=claim_clean,
-            evidence_items=valid_evidence,
-            claim_date=claim_date,
-            label_definitions=self.config.label_definitions,
-        )
+        if is_free_prompt:
+            user_prompt = build_free_verification_prompt(
+                claim=claim_clean,
+                evidence_items=valid_evidence if valid_evidence else None,
+                claim_date=claim_date,
+                label_definitions=self.config.label_definitions,
+            )
+            supplied_ids_check = None  # Free prompt does not constrain citations to closed set
+        else:
+            user_prompt = build_verification_prompt(
+                claim=claim_clean,
+                evidence_items=valid_evidence,
+                claim_date=claim_date,
+                label_definitions=self.config.label_definitions,
+            )
+            supplied_ids_check = supplied_ids
 
         # 3. Attempt 1
         logger.debug("Executing verification Attempt 1 for claim: %s", claim_clean[:60])
@@ -278,7 +296,7 @@ class EvidenceConstrainedVerifier:
 
         result1, err1 = parse_and_validate_response(
             response1.content,
-            supplied_evidence_ids=supplied_ids,
+            supplied_evidence_ids=supplied_ids_check,
             allowed_labels=VALID_LABELS,
         )
 
@@ -310,7 +328,7 @@ class EvidenceConstrainedVerifier:
             response=response1,
             claim=claim_clean,
             claim_date=claim_date,
-            supplied_evidence_ids=supplied_ids,
+            supplied_evidence_ids=supplied_ids_check,
             attempt=1,
             error=err1,
         )
@@ -320,7 +338,7 @@ class EvidenceConstrainedVerifier:
             original_prompt=user_prompt,
             raw_response=response1.content,
             error_message=err1 or "Invalid response format.",
-            supplied_evidence_ids=supplied_ids,
+            supplied_evidence_ids=supplied_ids_check,
         )
 
         response2 = self.client.generate(
@@ -332,7 +350,7 @@ class EvidenceConstrainedVerifier:
 
         result2, err2 = parse_and_validate_response(
             response2.content,
-            supplied_evidence_ids=supplied_ids,
+            supplied_evidence_ids=supplied_ids_check,
             allowed_labels=VALID_LABELS,
         )
 

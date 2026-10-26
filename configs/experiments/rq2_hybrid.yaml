@@ -1,0 +1,50 @@
+# =============================================================================
+# RQ2: Hybrid Fusion Retrieval Experiment
+# =============================================================================
+
+experiment:
+  name: rq2_hybrid
+  research_question: RQ2
+  description: "Hybrid Reciprocal Rank Fusion (BM25 + Dense)"
+  comparison_factor: "retrieval_mode"
+  factor_value: "hybrid"
+  seed: 42
+  version: "1.0"
+
+dataset:
+  name: liar
+  version: "v1.0"
+  split: test
+  path: data/processed/liar_test.jsonl
+
+paths:
+  results_dir: results/experiments
+
+pipeline:
+  retrieval_mode: hybrid
+  retrieval_top_k: 10
+  save_verdicts: true
+
+retrieval:
+  mode: hybrid
+  bm25:
+    index_dir: data/indexes/bm25_default
+    bm25_top_k: 50
+  dense:
+    index_dir: data/indexes/dense_default
+    dense_top_k: 50
+  hybrid:
+    rrf_constant: 60
+
+verification:
+  backend: mock
+  model: mock-model
+  temperature: 0.0
+  max_tokens: 512
+  prompt_mode: evidence_constrained
+  abstain_label: Unverified
+  save_traces: true
+
+smoke_test:
+  enabled: false
+  max_claims: 20

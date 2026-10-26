@@ -1,0 +1,46 @@
+# =============================================================================
+# Overall Comparison: Baseline BM25 Only
+# Standard BM25 retrieval without credibility, temporal, or faithfulness gate.
+# =============================================================================
+
+experiment:
+  name: overall_baseline_bm25_only
+  research_question: Overall
+  description: "Standard BM25 retrieval without credibility, temporal, or faithfulness gate"
+  comparison_factor: "architecture"
+  factor_value: "bm25_only"
+  seed: 42
+  version: "1.0"
+
+dataset:
+  name: liar
+  version: "v1.0"
+  split: test
+  path: data/processed/liar_test.jsonl
+
+paths:
+  results_dir: results/experiments
+
+pipeline:
+  retrieval_mode: bm25
+  retrieval_top_k: 10
+  save_verdicts: true
+
+retrieval:
+  mode: bm25
+  bm25:
+    index_dir: data/indexes/bm25_default
+    bm25_top_k: 50
+
+verification:
+  backend: mock
+  model: mock-model
+  temperature: 0.0
+  max_tokens: 512
+  prompt_mode: evidence_constrained
+  abstain_label: Unverified
+  save_traces: true
+
+smoke_test:
+  enabled: false
+  max_claims: 20

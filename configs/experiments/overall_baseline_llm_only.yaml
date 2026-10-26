@@ -1,0 +1,44 @@
+# =============================================================================
+# Overall Comparison: Baseline LLM-Only
+# Direct parametric knowledge verification without retrieval or scoring.
+# =============================================================================
+
+experiment:
+  name: overall_baseline_llm_only
+  research_question: Overall
+  description: "LLM-only baseline without retrieval or scoring"
+  comparison_factor: "architecture"
+  factor_value: "llm_only"
+  seed: 42
+  version: "1.0"
+
+dataset:
+  name: liar
+  version: "v1.0"
+  split: test
+  path: data/processed/liar_test.jsonl
+
+paths:
+  results_dir: results/experiments
+
+pipeline:
+  retrieval_mode: none
+  retrieval_top_k: 0
+  save_verdicts: true
+
+retrieval:
+  mode: none
+
+verification:
+  backend: mock
+  model: mock-model
+  temperature: 0.0
+  max_tokens: 512
+  prompt_mode: free
+  allow_no_evidence: true
+  abstain_label: Unverified
+  save_traces: true
+
+smoke_test:
+  enabled: false
+  max_claims: 20
