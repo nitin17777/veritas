@@ -1,0 +1,22 @@
+# VERITAS P7 Faithfulness Checking & Abstention Policy Configuration
+#
+# IMPORTANT SCIENTIFIC DISCLAIMER:
+# Natural Language Inference (NLI) evaluates premise-hypothesis entailment according
+# to an empirical statistical model. NLI does NOT provide proof of objective truth,
+# nor is it an infallible detector of hallucinations. It serves as a heuristic
+# risk-reduction filter.
+
+faithfulness:
+  # Abstention decision thresholds
+  min_confidence: 0.60
+  min_faithfulness: 0.70
+  entailment_threshold: 0.50
+
+  # Operational policy: "abstain" (downgrade to abstain_label) or "flag_only" (warn only)
+  mode: "abstain"
+  abstain_label: "Unverified"
+
+  # NLI model backend
+  # "mock" for testing/offline, or Hugging Face model such as "cross-encoder/nli-deberta-v3-small"
+  nli_model_name: "mock"
+  device: "cpu"
