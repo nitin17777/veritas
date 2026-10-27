@@ -205,13 +205,14 @@ class ClaimExtractor:
 
         if llm_client is not None:
             self.client = llm_client
-        else:
             self.client = create_llm_client(
                 backend=self.config.backend,
                 model_name=self.config.model_name,
-                api_key=self.config.api_key,
-                api_base_url=self.config.api_base_url,
-                timeout=self.config.timeout_seconds,
+                config={
+                    "api_key": self.config.api_key,
+                    "api_base": self.config.api_base_url,
+                    "timeout": self.config.timeout_seconds,
+                },
             )
 
     def extract(

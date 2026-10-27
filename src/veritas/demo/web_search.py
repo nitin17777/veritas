@@ -116,6 +116,133 @@ def fetch_page_text(
         return None
 
 
+def search_duckduckgo_lite(
+    query: str,
+    max_results: int = 5,
+    timeout: float = 10.0,
+) -> list[LiveSearchHit]:
+    """Execute live search using DuckDuckGo Lite endpoint (clean HTML, reliable, bot-resilient)."""
+    endpoint = "https://lite.duckduckgo.com/lite/"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Content-Type": "application/x-www-form-urlencoded",
+    }
+
+    content: str | None = None
+    # Attempt 1: requests library (handles session / connection reuse reliably on Windows)
+    try:
+        import requests
+
+        resp = requests.post(
+            endpoint,
+            data={"q": query.strip()},
+            headers=headers,
+            timeout=timeout,
+        )
+        if resp.status_code == 200:
+            content = resp.text
+    except Exception as exc:
+        logger.debug("DDG Lite requests attempt failed: %s; trying urllib", exc)
+
+    # Attempt 2: urllib fallback
+    if not content:
+        try:
+            data = urllib.parse.urlencode({"q": query.strip()}).encode("utf-8")
+            req = urllib.request.Request(endpoint, data=data, headers=headers)
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                content = resp.read().decode("utf-8", errors="replace")
+        except Exception as exc:
+            logger.warning("DuckDuckGo Lite search failed for '%s': %s", query, exc)
+            return []
+
+    hits: list[LiveSearchHit] = []
+    try:
+        from bs4 import BeautifulSoup
+
+        soup = BeautifulSoup(content, "html.parser")
+        links = soup.find_all("a", class_="result-link")
+        snippets = soup.find_all("td", class_="result-snippet")
+        for link, snippet_td in zip(links[:max_results], snippets[:max_results]):
+            raw_url = link.get("href", "")
+            target_url = raw_url
+            if "uddg=" in raw_url:
+                parsed = urllib.parse.urlsplit(raw_url)
+                params = urllib.parse.parse_qs(parsed.query)
+                if "uddg" in params:
+                    target_url = urllib.parse.unquote(params["uddg"][0])
+            elif raw_url.startswith(("//duckduckgo.com/l/?uddg=", "/l/?uddg=")):
+                parsed = urllib.parse.urlsplit(raw_url)
+                params = urllib.parse.parse_qs(parsed.query)
+                if "uddg" in params:
+                    target_url = urllib.parse.unquote(params["uddg"][0])
+
+            title = link.get_text(strip=True)
+            snippet = snippet_td.get_text(strip=True)
+            domain = extract_domain_from_url(target_url) or "web"
+            if target_url and title:
+                hits.append(
+                    LiveSearchHit(
+                        title=title,
+                        url=target_url,
+                        snippet=snippet,
+                        domain=domain,
+                        date=None,
+                    )
+                )
+    except Exception as parse_exc:
+        logger.debug("BS4 parsing failed for DDG Lite: %s", parse_exc)
+
+    return hits
+
+
+def search_wikipedia(
+    query: str,
+    max_results: int = 5,
+    timeout: float = 8.0,
+) -> list[LiveSearchHit]:
+    """Live search using official Wikipedia Search API as a dependable encyclopedic fallback."""
+    try:
+        import requests
+
+        url = "https://en.wikipedia.org/w/api.php"
+        params = {
+            "action": "query",
+            "list": "search",
+            "srsearch": query.strip(),
+            "format": "json",
+            "utf8": 1,
+            "srlimit": max_results,
+        }
+        headers = {
+            "User-Agent": "VeritasFactVerification/1.0 (https://github.com/veritas)",
+            "Accept": "application/json",
+        }
+        resp = requests.get(url, params=params, headers=headers, timeout=timeout)
+        if resp.status_code == 200:
+            data = resp.json()
+            items = data.get("query", {}).get("search", [])
+            hits: list[LiveSearchHit] = []
+            for item in items[:max_results]:
+                title = item.get("title", "")
+                page_url = f"https://en.wikipedia.org/wiki/{urllib.parse.quote(title.replace(' ', '_'))}"
+                raw_snippet = item.get("snippet", "")
+                clean_snippet = html.unescape(re.sub(r"<[^>]+>", "", raw_snippet)).strip()
+                hits.append(
+                    LiveSearchHit(
+                        title=f"{title} - Wikipedia",
+                        url=page_url,
+                        snippet=clean_snippet,
+                        domain="wikipedia.org",
+                        date=None,
+                    )
+                )
+            return hits
+    except Exception as exc:
+        logger.warning("Wikipedia API search failed for '%s': %s", query, exc)
+    return []
+
+
 def search_duckduckgo_html(
     query: str,
     max_results: int = 5,
@@ -245,12 +372,24 @@ def search_web(
         return search_mock(query, max_results=max_results)
 
     if prov == "duckduckgo":
-        hits = search_duckduckgo_html(query, max_results=max_results, timeout=timeout)
+        # First try DuckDuckGo Lite which is resilient against bot challenges
+        hits = search_duckduckgo_lite(query, max_results=max_results, timeout=timeout)
         if not hits:
-            # Fallback to mock if network offline or blocked
-            logger.info("DuckDuckGo returned 0 results; falling back to mock provider.")
+            # Fallback to standard HTML endpoint
+            hits = search_duckduckgo_html(query, max_results=max_results, timeout=timeout)
+        if not hits:
+            # Fallback to Wikipedia API for real encyclopedic information
+            logger.info("DuckDuckGo returned 0 results; querying Wikipedia API.")
+            hits = search_wikipedia(query, max_results=max_results, timeout=timeout)
+        if not hits:
+            # Fallback to mock only if network completely unreachable
+            logger.info("Live search returned 0 results; falling back to mock provider.")
             return search_mock(query, max_results=max_results)
         return hits
+
+    if prov == "wikipedia":
+        hits = search_wikipedia(query, max_results=max_results, timeout=timeout)
+        return hits or search_mock(query, max_results=max_results)
 
     # Default fallback
     return search_mock(query, max_results=max_results)

@@ -296,9 +296,37 @@ st.markdown(
 
 
 @st.cache_resource(show_spinner=False)
-def get_engine() -> VeritasDemoEngine:
+def get_engine(backend: str = "local") -> VeritasDemoEngine:
     """Initialize and cache the VERITAS demo verification engine."""
-    return VeritasDemoEngine(config_path="configs/demo.yaml")
+    llm_client = None
+    if backend == "local":
+        try:
+            from veritas.verification.llm_client import APILLMClient
+
+            llm_client = APILLMClient(
+                model_name="qwen2.5:7b",
+                api_base="http://localhost:11434/v1",
+                api_key="ollama",
+                provider="openai",
+                timeout=60.0,
+            )
+        except Exception as exc:
+            logger.warning("Local Ollama client init failed: %s; falling back to mock", exc)
+            llm_client = None
+    elif backend == "api":
+        try:
+            from veritas.verification.llm_client import APILLMClient
+
+            llm_client = APILLMClient(
+                model_name="gpt-4o-mini",
+                provider="openai",
+                timeout=60.0,
+            )
+        except Exception as exc:
+            logger.warning("API client init failed: %s; falling back to mock", exc)
+            llm_client = None
+
+    return VeritasDemoEngine(config_path="configs/demo.yaml", llm_client=llm_client)
 
 
 @st.cache_data(show_spinner=False, ttl=3600)
@@ -306,9 +334,10 @@ def cached_verify_claim(
     claim: str,
     claim_date: str | None,
     mode: str,
+    backend: str = "local",
 ) -> dict:
     """Cache verification results for repeated identical queries."""
-    engine = get_engine()
+    engine = get_engine(backend=backend)
     res = engine.verify_claim(claim=claim, claim_date=claim_date, mode=mode)
     return res.to_dict()
 
@@ -357,27 +386,31 @@ with st.sidebar:
     st.markdown("### Evidence source")
     mode_selection = st.radio(
         "Retrieval Source",
-        options=["Benchmark Corpus", "Live Web Search"],
+        options=["Live Web Search", "Benchmark Corpus"],
+        index=0,
         label_visibility="collapsed",
         help=(
-            "Benchmark Corpus searches local pre-built indexes (fast & offline). "
-            "Live Web Search queries DuckDuckGo for live internet evidence."
+            "Live Web Search queries DuckDuckGo for live internet evidence. "
+            "Benchmark Corpus searches local pre-built indexes (fast & offline)."
         ),
     )
-    mode_key = "benchmark" if mode_selection == "Benchmark Corpus" else "live_search"
-    st.markdown('<div class="note">Corpus is fast and offline. Live web checks today’s internet.</div>', unsafe_allow_html=True)
+    mode_key = "live_search" if mode_selection == "Live Web Search" else "benchmark"
+    st.markdown('<div class="note">Live web checks today’s internet. Corpus is offline.</div>', unsafe_allow_html=True)
 
     st.markdown("### Checking model")
-    model_backend = st.selectbox(
+    model_backend_choice = st.selectbox(
         "Verification Model",
-        options=["mock", "api", "local"],
+        options=["local (Ollama qwen2.5:7b)", "mock (offline canned)", "api (OpenAI / Anthropic)"],
+        index=0,
         label_visibility="collapsed",
         help=(
+            "local: Uses local Ollama qwen2.5:7b (free, private, intelligent). "
             "mock: offline deterministic verifier (zero API cost). "
-            "api: OpenAI / Anthropic cloud model. "
-            "local: Ollama local weights."
+            "api: OpenAI / Anthropic cloud model."
         ),
     )
+    backend_key = "local" if "local" in model_backend_choice else ("api" if "api" in model_backend_choice else "mock")
+    model_backend = backend_key
 
     st.markdown("### Safety checks")
     use_abstention = st.toggle(
@@ -493,7 +526,7 @@ if submit_clicked:
     if not claim_input.strip():
         st.warning("Type or paste something to check, or pick an example above.")
     else:
-        engine = get_engine()
+        engine = get_engine(backend=backend_key)
         if engine.is_long_text(claim_input):
             with st.spinner("Reading the text and finding claims worth checking…"):
                 extracted_claims = engine.extract_claims(claim_input)
@@ -510,6 +543,7 @@ if submit_clicked:
                                 claim=ec.claim,
                                 claim_date=claim_date_input.strip() or None,
                                 mode=mode_key,
+                                backend=backend_key,
                             )
                         st.markdown(verdict_html(res_dict["label"], res_dict["confidence"], small=True), unsafe_allow_html=True)
                         st.markdown(f'<div class="explain" style="margin-top:0">{esc(res_dict["explanation"])}</div>', unsafe_allow_html=True)
@@ -522,6 +556,7 @@ if submit_clicked:
                     claim=claim_input.strip(),
                     claim_date=claim_date_input.strip() or None,
                     mode=mode_key,
+                    backend=backend_key,
                 )
             st.session_state.last_result = res_dict
 

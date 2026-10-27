@@ -116,7 +116,7 @@ class VeritasDemoEngine:
         self.claim_extractor: ClaimExtractor | None = None
         if self.demo_cfg.get("claim_extraction", {}).get("enabled", True):
             try:
-                self.claim_extractor = ClaimExtractor(client=llm_client)
+                self.claim_extractor = ClaimExtractor(llm_client=llm_client)
             except Exception as exc:
                 logger.warning("ClaimExtractor initialization skipped: %s", exc)
 

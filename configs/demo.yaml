@@ -4,7 +4,7 @@
 
 demo:
   # Mode: 'benchmark' (local indexes / fixtures) or 'live_search' (web retrieval)
-  default_mode: "benchmark"
+  default_mode: "live_search"
   title: "VERITAS: Evidence-Grounded Fact Verification"
   disclaimer: "VERITAS assists human judgment and does not guarantee factual correctness."
 
