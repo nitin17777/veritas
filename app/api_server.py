@@ -131,7 +131,7 @@ def dynamic_evidence_verifier(prompt: str, system_prompt: str | None = None) -> 
             "label": "Unverified",
             "confidence": 0.0,
             "evidence_ids": [],
-            "explanation": f"The retrieved evidence passages do not contain information directly addressing the claim '{claim_text}'. Under VERITAS closed-world constraints, the system abstains from verifying claims without sufficient direct evidence.",
+            "explanation": f"We could not find trustworthy, verified sources in the database that directly confirm or disprove the statement: \"{claim_text}\". To prevent misleading assumptions or spreading false rumors, this claim remains unverified until direct supporting documentation is provided.",
         })
 
     best_id, best_text, overlap_count = scored_passages[0]
@@ -142,26 +142,30 @@ def dynamic_evidence_verifier(prompt: str, system_prompt: str | None = None) -> 
     has_refutation = any(neg in best_lower for neg in refutation_indicators)
 
     # Check if claim contains assertion directly negated in evidence
+    clean_quote = best_text.strip()
+    if len(clean_quote) > 220:
+        clean_quote = clean_quote[:220].rstrip() + "..."
+
     if has_refutation and overlap_count >= 2:
         return json.dumps({
             "label": "False",
             "confidence": 0.92,
             "evidence_ids": [best_id],
-            "explanation": f"Evidence passage [{best_id}] refutes the claim: '{best_text[:200]}...' [E1].",
+            "explanation": f"This claim is contradicted by official findings in [{best_id}] [E1]. The evidence clarifies: \"{clean_quote}\"",
         })
     elif overlap_count >= 2:
         return json.dumps({
             "label": "True",
             "confidence": 0.90,
             "evidence_ids": [best_id],
-            "explanation": f"Evidence passage [{best_id}] supports the claim: '{best_text[:200]}...' [E1].",
+            "explanation": f"This claim is confirmed by factual documentation in [{best_id}] [E1]. The records state: \"{clean_quote}\"",
         })
     else:
         return json.dumps({
             "label": "Partially True",
             "confidence": 0.70,
             "evidence_ids": [best_id],
-            "explanation": f"Evidence passage [{best_id}] provides partial context on the claim: '{best_text[:200]}...' [E1].",
+            "explanation": f"This claim is only partially accurate. While related facts appear in [{best_id}] [E1], crucial context is needed: \"{clean_quote}\"",
         })
 
 

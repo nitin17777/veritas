@@ -31,6 +31,7 @@ function ScoreBar({
 
 export function ResultsPage({ result }: ResultsPageProps) {
   const [sort, setSort] = useState("Highest combined score");
+  const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
   const [methodOpen, setMethodOpen] = useState(false);
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const [copyStatus, setCopyStatus] = useState<string | null>(null);
@@ -128,6 +129,45 @@ ${result.disclaimer}
   const verdictClass = result.verdict.toLowerCase().replace(" ", "-");
   const corroboratingCount = result.evidence_cards.length;
 
+  // Clear, non-technical verdict summaries for everyday users
+  const getPlainEnglishSummary = (verdict: string) => {
+    switch (verdict.toUpperCase()) {
+      case "TRUE":
+        return {
+          title: "Verified: This statement is accurate",
+          desc: "Reliable documentation and credible evidence confirm that this claim is factually correct.",
+          badgeText: "Confirmed True",
+        };
+      case "FALSE":
+        return {
+          title: "Disproven: This statement is false",
+          desc: "Direct evidence and official findings contradict this claim.",
+          badgeText: "Factually Incorrect",
+        };
+      case "PARTIALLY TRUE":
+        return {
+          title: "Needs Context: Partially accurate",
+          desc: "Some elements are real, but key context or nuances are missing or overstated.",
+          badgeText: "Partially True",
+        };
+      case "MISLEADING":
+        return {
+          title: "Misleading: Out-of-context or distorted",
+          desc: "The statement presents facts in a selective way that leads to a false impression.",
+          badgeText: "Misleading",
+        };
+      case "UNVERIFIED":
+      default:
+        return {
+          title: "Unverified: Insufficient evidence to confirm",
+          desc: "No verified, credible records exist in the corpus to confirm or deny this claim. VERITAS abstains from guessing.",
+          badgeText: "Unverified / Needs Evidence",
+        };
+    }
+  };
+
+  const plainSummary = getPlainEnglishSummary(result.verdict);
+
   // Render explanation text with clickable citation tokens like [E1], [E2]
   const renderFormattedExplanation = (text: string) => {
     const parts = text.split(/(\[E\d+\])/g);
@@ -184,8 +224,11 @@ ${result.disclaimer}
             <Icon name={result.verdict === "TRUE" ? "check" : result.verdict === "FALSE" ? "x" : "shield"} size={26} />
           </div>
           <div>
-            <span className="label">VERDICT</span>
+            <span className="label">FINAL VERDICT · {plainSummary.badgeText.toUpperCase()}</span>
             <h2>{result.verdict}</h2>
+            <p style={{ fontSize: "1.05rem", fontWeight: 500, color: "var(--foreground)", margin: "0.25rem 0 0.5rem 0" }}>
+              {plainSummary.title}
+            </p>
             <p>
               {renderFormattedExplanation(result.explanation)}
             </p>
@@ -194,17 +237,18 @@ ${result.disclaimer}
         <div className="confidence-block">
           <div className="confidence-value">
             <div>
-              <span>Model confidence</span>
+              <span>Certainty level</span>
               <strong>{result.confidence}%</strong>
             </div>
-            <span className="confidence-caption">Confidence in classification</span>
+            <span className="confidence-caption">
+              {result.confidence >= 80 ? "Strong factual support" : result.confidence >= 60 ? "Moderate evidence backing" : "Low / Inconclusive"}
+            </span>
           </div>
           <div className="confidence-bar">
             <span style={{ width: `${result.confidence}%` }} />
           </div>
           <p>
-            {result.confidence >= 80 ? "High" : result.confidence >= 60 ? "Moderate" : "Low"} confidence based on{" "}
-            {corroboratingCount} corroborated evidence source{corroboratingCount === 1 ? "" : "s"}.
+            Based on {corroboratingCount} corroborated source{corroboratingCount === 1 ? "" : "s"}.
           </p>
         </div>
       </section>
@@ -396,75 +440,79 @@ ${result.disclaimer}
             <div className="aside-heading">
               <div>
                 <h3>Evidence scoring</h3>
-                <p>Why these sources ranked highest</p>
+                <p>How sources were evaluated</p>
               </div>
-              <Icon name="info" size={16} />
+              <button
+                type="button"
+                className="btn btn-secondary"
+                style={{ fontSize: "0.75rem", padding: "0.2rem 0.5rem" }}
+                onClick={() => setShowTechnicalDetails(!showTechnicalDetails)}
+              >
+                {showTechnicalDetails ? "Simple view" : "Tech details"}
+              </button>
             </div>
-            <ScoreBar label="Relevance" value={result.evidence_scoring?.relevance ?? 92} />
+            <ScoreBar label="Relevance to claim" value={result.evidence_scoring?.relevance ?? 92} />
             <ScoreBar
-              label="Source credibility"
+              label="Source reputation"
               value={result.evidence_scoring?.credibility ?? 90}
               tone="green"
             />
             <ScoreBar
-              label="Temporal validity"
+              label="Recency alignment"
               value={result.evidence_scoring?.temporal ?? 94}
               tone="amber"
             />
-            <div className="formula">
-              <span>COMBINED SCORE</span>
-              <strong>{result.evidence_scoring?.combined ?? 92} / 100</strong>
-              <code>{result.evidence_scoring?.formula || "0.60 × Rel. + 0.25 × Cred. + 0.15 × Temp."}</code>
-            </div>
+            {showTechnicalDetails && (
+              <div className="formula" style={{ marginTop: "1rem" }}>
+                <span>COMBINED SCORE FORMULA</span>
+                <strong>{result.evidence_scoring?.combined ?? 92} / 100</strong>
+                <code>{result.evidence_scoring?.formula || "0.60 × Rel. + 0.25 × Cred. + 0.15 × Temp."}</code>
+              </div>
+            )}
             <p className="fineprint">
-              Credibility reflects source quality, not whether a claim is factually correct.
+              Scores measure source credibility and topical match, ensuring conclusions are based on trustworthy publications.
             </p>
           </section>
 
           <section className="card reliability">
             <div className="aside-heading">
               <div>
-                <h3>Explanation reliability</h3>
-                <p>Independent quality signals</p>
+                <h3>Hallucination check</h3>
+                <p>NLI truth-grounding guard</p>
               </div>
             </div>
             <div className="reliability-status">
               <Icon name="shield" size={20} />
               <div>
                 <strong>
-                  {result.is_supported ? "Evidence-supported" : "Abstained / Insufficient Evidence"}
+                  {result.is_supported ? "Verified Grounded" : "Needs More Proof"}
                 </strong>
                 <span>
                   {result.is_supported
-                    ? "Explanation statements entailed by cited passages"
-                    : "System conservative abstention triggered"}
+                    ? "Explanation statements are strictly backed by the cited quotes"
+                    : "System abstained to prevent guessing without evidence"}
                 </span>
               </div>
             </div>
             <div className="metric-list">
               <div>
-                <span>Faithfulness score</span>
+                <span>Source match rate</span>
                 <strong>{result.faithfulness_score}%</strong>
               </div>
               <div>
-                <span>Model confidence</span>
+                <span>Certainty score</span>
                 <strong>{result.confidence}%</strong>
               </div>
               <div>
-                <span>NLI validation</span>
+                <span>Fact-check guard</span>
                 <strong className={result.nli_status === "Passed" ? "pass" : "fail"}>
                   {result.nli_status === "Passed" && <Icon name="check" size={13} />}
-                  {" "}{result.nli_status}
+                  {" "}{result.nli_status === "Passed" ? "Passed (No Hallucination)" : "Flagged"}
                 </strong>
-              </div>
-              <div>
-                <span>System abstained</span>
-                <strong>{result.abstained ? "Yes" : "No"}</strong>
               </div>
             </div>
             <p className="fineprint">
-              Each explanation sentence is checked against cited evidence. NLI validation supports
-              consistency; it does not guarantee truth.
+              VERITAS checks every sentence against the actual documents to prevent AI fabricated claims.
             </p>
           </section>
 

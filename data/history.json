@@ -1,5 +1,502 @@
 [
   {
+    "id": "veritas_123700222",
+    "claim": "bihar is in india",
+    "verdict": "TRUE",
+    "confidence": 90,
+    "date": "November 16, 2026",
+    "evidence": 5,
+    "result": {
+      "id": "veritas_123700222",
+      "claim": "bihar is in india",
+      "verdict": "TRUE",
+      "confidence": 90,
+      "explanation": "Evidence passage [live_web_1_wikipedia_org] supports the claim: 'Bihar\n| Bihar |  | \n|---|---|\n| Nickname: \"Land of Monasteries\" |  | \n| Motto: Satyameva Jayate (Truth alone triumphs) |  | \n| Anthem: Mere Bharat Ke Kanthahar (The Garland of My India) |  | \n| Coordi...' [E1].",
+      "evidence_cards": [
+        {
+          "id": "E1",
+          "passage_id": "live_web_1_wikipedia_org",
+          "source": "Wikipedia",
+          "domain": "wikipedia.org",
+          "date": "Date unspecified",
+          "tier": "Tier 3: Mainstream / General",
+          "stance": "Supports claim",
+          "quote": "Bihar\n| Bihar |  | \n|---|---|\n| Nickname: \"Land of Monasteries\" |  | \n| Motto: Satyameva Jayate (Truth alone triumphs) |  | \n| Anthem: Mere Bharat Ke Kanthahar (The Garland of My India) |  | \n| Coordi",
+          "relevance": 80,
+          "credibility": 50,
+          "temporal": 50,
+          "combined": 68,
+          "is_cited": true,
+          "url": "https://en.wikipedia.org/wiki/Bihar"
+        },
+        {
+          "id": "E2",
+          "passage_id": "live_web_2_wikipedia_org",
+          "source": "Wikipedia",
+          "domain": "wikipedia.org",
+          "date": "Date unspecified",
+          "tier": "Tier 3: Mainstream / General",
+          "stance": "Provides context",
+          "quote": "2025 Bihar Legislative Assembly election\n| 2025 Bihar Legislative Assembly election |  | \n|---|---|\n| November 6, 2025 and November 11, 2025 |  | \n| All 243 seats in the Bihar Legislative Assembly 122",
+          "relevance": 50,
+          "credibility": 50,
+          "temporal": 50,
+          "combined": 50,
+          "is_cited": false,
+          "url": "https://en.wikipedia.org/wiki/2025_Bihar_Legislative_Assembly_election"
+        },
+        {
+          "id": "E3",
+          "passage_id": "live_web_3_wikipedia_org",
+          "source": "Wikipedia",
+          "domain": "wikipedia.org",
+          "date": "Date unspecified",
+          "tier": "Tier 3: Mainstream / General",
+          "stance": "Provides context",
+          "quote": "List of districts of Bihar\nBihar, a state of India, currently has 38 administrative districts, 101 subdivisions (अनुमंडल) and 534 CD blocks.\nAdministration\n[edit]\n| Administrative Division in Details",
+          "relevance": 40,
+          "credibility": 50,
+          "temporal": 50,
+          "combined": 44,
+          "is_cited": false,
+          "url": "https://en.wikipedia.org/wiki/List_of_districts_of_Bihar"
+        },
+        {
+          "id": "E4",
+          "passage_id": "live_web_4_wikipedia_org",
+          "source": "Wikipedia",
+          "domain": "wikipedia.org",
+          "date": "Date unspecified",
+          "tier": "Tier 3: Mainstream / General",
+          "stance": "Provides context",
+          "quote": "2015 Bihar Legislative Assembly election\n| 2015 Bihar Legislative Assembly election |  | \n|---|---|\n| 12 October 2015 – 5 November 2015 |  | \n| All 243 seats of the Bihar Legislative Assembly 122 seat",
+          "relevance": 35,
+          "credibility": 50,
+          "temporal": 50,
+          "combined": 41,
+          "is_cited": false,
+          "url": "https://en.wikipedia.org/wiki/2015_Bihar_Legislative_Assembly_election"
+        },
+        {
+          "id": "E5",
+          "passage_id": "live_web_5_wikipedia_org",
+          "source": "Wikipedia",
+          "domain": "wikipedia.org",
+          "date": "Date unspecified",
+          "tier": "Tier 3: Mainstream / General",
+          "stance": "Provides context",
+          "quote": "Communist Party of India (Marxist–Leninist) Liberation\n| Communist Party of India (Marxist–Leninist) Liberation |  | \n|---|---|\n| Abbreviation | CPI(ML), CPI–ML, CPIML(L), CPI–ML(L), CPIML Liberation",
+          "relevance": 32,
+          "credibility": 50,
+          "temporal": 50,
+          "combined": 39,
+          "is_cited": false,
+          "url": "https://en.wikipedia.org/wiki/Communist_Party_of_India_%28Marxist%E2%80%93Leninist%29_Liberation"
+        }
+      ],
+      "source_mode": "Live Web Search",
+      "abstained": false,
+      "abstention_reasons": [],
+      "faithfulness_score": 100,
+      "is_supported": true,
+      "nli_status": "Passed",
+      "evidence_scoring": {
+        "relevance": 47,
+        "credibility": 50,
+        "temporal": 50,
+        "combined": 48,
+        "formula": "0.60 × Rel. + 0.25 × Cred. + 0.15 × Temp."
+      },
+      "pipeline_stages": [
+        {
+          "name": "Claim extraction",
+          "time_ms": 0
+        },
+        {
+          "name": "Hybrid retrieval",
+          "time_ms": 0
+        },
+        {
+          "name": "Evidence scoring",
+          "time_ms": 0
+        },
+        {
+          "name": "LLM verification",
+          "time_ms": 2
+        },
+        {
+          "name": "NLI faithfulness gate",
+          "time_ms": 0
+        }
+      ],
+      "completed_at": "November 16, 2026 at 10:40 AM",
+      "disclaimer": "VERITAS assists human judgment and does not guarantee factual correctness."
+    }
+  },
+  {
+    "id": "veritas_140078955",
+    "claim": "bihar is inindia",
+    "verdict": "PARTIALLY TRUE",
+    "confidence": 70,
+    "date": "November 16, 2026",
+    "evidence": 1,
+    "result": {
+      "id": "veritas_140078955",
+      "claim": "bihar is inindia",
+      "verdict": "PARTIALLY TRUE",
+      "confidence": 70,
+      "explanation": "Evidence passage [live_web_1_wikipedia_org] provides partial context on the claim: 'Central Statistics Office (India)\n| Central Statistics Office |  | \n|---|---|\n| Agency Overview overview |  | \n|---|---|\n| Formed | 2 May 1951 | \n| Preceding agencies |  | \n| Jurisdiction | Government...' [E1].",
+      "evidence_cards": [
+        {
+          "id": "E1",
+          "passage_id": "live_web_1_wikipedia_org",
+          "source": "Wikipedia",
+          "domain": "wikipedia.org",
+          "date": "Date unspecified",
+          "tier": "Tier 3: Mainstream / General",
+          "stance": "Supports claim",
+          "quote": "Central Statistics Office (India)\n| Central Statistics Office |  | \n|---|---|\n| Agency Overview overview |  | \n|---|---|\n| Formed | 2 May 1951 | \n| Preceding agencies |  | \n| Jurisdiction | Government",
+          "relevance": 80,
+          "credibility": 50,
+          "temporal": 50,
+          "combined": 68,
+          "is_cited": true,
+          "url": "https://en.wikipedia.org/wiki/Central_Statistics_Office_%28India%29"
+        }
+      ],
+      "source_mode": "Live Web Search",
+      "abstained": false,
+      "abstention_reasons": [],
+      "faithfulness_score": 100,
+      "is_supported": true,
+      "nli_status": "Passed",
+      "evidence_scoring": {
+        "relevance": 80,
+        "credibility": 50,
+        "temporal": 50,
+        "combined": 68,
+        "formula": "0.60 × Rel. + 0.25 × Cred. + 0.15 × Temp."
+      },
+      "pipeline_stages": [
+        {
+          "name": "Claim extraction",
+          "time_ms": 0
+        },
+        {
+          "name": "Hybrid retrieval",
+          "time_ms": 0
+        },
+        {
+          "name": "Evidence scoring",
+          "time_ms": 0
+        },
+        {
+          "name": "LLM verification",
+          "time_ms": 1
+        },
+        {
+          "name": "NLI faithfulness gate",
+          "time_ms": 0
+        }
+      ],
+      "completed_at": "November 16, 2026 at 10:39 AM",
+      "disclaimer": "VERITAS assists human judgment and does not guarantee factual correctness."
+    }
+  },
+  {
+    "id": "veritas_936707589",
+    "claim": "bihar is inindia",
+    "verdict": "UNVERIFIED",
+    "confidence": 0,
+    "date": "November 16, 2026",
+    "evidence": 0,
+    "result": {
+      "id": "veritas_936707589",
+      "claim": "bihar is inindia",
+      "verdict": "UNVERIFIED",
+      "confidence": 0,
+      "explanation": "The retrieved evidence passages do not contain information directly addressing the claim 'bihar is inindia'. Under VERITAS closed-world constraints, the system abstains from verifying claims without sufficient direct evidence.",
+      "evidence_cards": [],
+      "source_mode": "Benchmark Corpus",
+      "abstained": true,
+      "abstention_reasons": [],
+      "faithfulness_score": 100,
+      "is_supported": false,
+      "nli_status": "Abstained",
+      "evidence_scoring": {
+        "relevance": 0,
+        "credibility": 0,
+        "temporal": 0,
+        "combined": 0,
+        "formula": "0.60 × Rel. + 0.25 × Cred. + 0.15 × Temp."
+      },
+      "pipeline_stages": [
+        {
+          "name": "Claim extraction",
+          "time_ms": 0
+        },
+        {
+          "name": "Hybrid retrieval",
+          "time_ms": 0
+        },
+        {
+          "name": "Evidence scoring",
+          "time_ms": 0
+        },
+        {
+          "name": "LLM verification",
+          "time_ms": 0
+        },
+        {
+          "name": "NLI faithfulness gate",
+          "time_ms": 0
+        }
+      ],
+      "completed_at": "November 16, 2026 at 10:39 AM",
+      "disclaimer": "VERITAS assists human judgment and does not guarantee factual correctness."
+    }
+  },
+  {
+    "id": "veritas_6705972",
+    "claim": "uk is uttarakhand",
+    "verdict": "PARTIALLY TRUE",
+    "confidence": 70,
+    "date": "November 16, 2026",
+    "evidence": 5,
+    "result": {
+      "id": "veritas_6705972",
+      "claim": "uk is uttarakhand",
+      "verdict": "PARTIALLY TRUE",
+      "confidence": 70,
+      "explanation": "Evidence passage [live_web_1_wikipedia_org] provides partial context on the claim: 'Uttarakhand\n| Uttarakhand |  | \n|---|---|\n| Etymology: Northern Land |  | \n| Nickname(s): Devabhumi; Land of the Gods |  | \n| Motto: |  | \n| Anthem: Uttarakhand Devabhumi Matribhumi (Hindi, Garhwali, ...' [E1].",
+      "evidence_cards": [
+        {
+          "id": "E1",
+          "passage_id": "live_web_1_wikipedia_org",
+          "source": "Wikipedia",
+          "domain": "wikipedia.org",
+          "date": "Date unspecified",
+          "tier": "Tier 3: Mainstream / General",
+          "stance": "Supports claim",
+          "quote": "Uttarakhand\n| Uttarakhand |  | \n|---|---|\n| Etymology: Northern Land |  | \n| Nickname(s): Devabhumi; Land of the Gods |  | \n| Motto: |  | \n| Anthem: Uttarakhand Devabhumi Matribhumi (Hindi, Garhwali,",
+          "relevance": 80,
+          "credibility": 50,
+          "temporal": 50,
+          "combined": 68,
+          "is_cited": true,
+          "url": "https://en.wikipedia.org/wiki/Uttarakhand"
+        },
+        {
+          "id": "E2",
+          "passage_id": "live_web_2_wikipedia_org",
+          "source": "Wikipedia",
+          "domain": "wikipedia.org",
+          "date": "Date unspecified",
+          "tier": "Tier 3: Mainstream / General",
+          "stance": "Provides context",
+          "quote": "List of agencies of the government of Uttarakhand\n| Uttarakhand Government Agencies |  | \n|---|---|\n| Government Agencies overview |  | \n|---|---|\n| Jurisdiction | Uttarakhand | \n| Headquarters |  |",
+          "relevance": 50,
+          "credibility": 50,
+          "temporal": 50,
+          "combined": 50,
+          "is_cited": false,
+          "url": "https://en.wikipedia.org/wiki/List_of_agencies_of_the_government_of_Uttarakhand"
+        },
+        {
+          "id": "E3",
+          "passage_id": "live_web_3_wikipedia_org",
+          "source": "Wikipedia",
+          "domain": "wikipedia.org",
+          "date": "Date unspecified",
+          "tier": "Tier 3: Mainstream / General",
+          "stance": "Provides context",
+          "quote": "2022 Uttarakhand Legislative Assembly election\n| 2022 Uttarakhand Legislative Assembly election |  | \n|---|---|\n| 14 February 2022 |  | \n| All 70 seats in the Uttarakhand Legislative Assembly 36 seats",
+          "relevance": 40,
+          "credibility": 50,
+          "temporal": 50,
+          "combined": 44,
+          "is_cited": false,
+          "url": "https://en.wikipedia.org/wiki/2022_Uttarakhand_Legislative_Assembly_election"
+        },
+        {
+          "id": "E4",
+          "passage_id": "live_web_4_wikipedia_org",
+          "source": "Wikipedia",
+          "domain": "wikipedia.org",
+          "date": "Date unspecified",
+          "tier": "Tier 3: Mainstream / General",
+          "stance": "Provides context",
+          "quote": "Uttarakhand Provincial Armed Constabulary\n| Uttarakhand Provincial Armed Constabulary |  | \n|---|---|\n| Active | 2001 | \n| Country | India | \n| Agency | Uttarakhand Police | \n| Type | State Armed Poli",
+          "relevance": 35,
+          "credibility": 50,
+          "temporal": 50,
+          "combined": 41,
+          "is_cited": false,
+          "url": "https://en.wikipedia.org/wiki/Uttarakhand_Provincial_Armed_Constabulary"
+        },
+        {
+          "id": "E5",
+          "passage_id": "live_web_5_wikipedia_org",
+          "source": "Wikipedia",
+          "domain": "wikipedia.org",
+          "date": "Date unspecified",
+          "tier": "Tier 3: Mainstream / General",
+          "stance": "Provides context",
+          "quote": "Rudrapur, Uttarakhand\n| Rudrapur |  | \n|---|---|\n| City |  | \n| Nagar Nigam Rudrapur |  | \n| Location in Uttarakhand, India Rudrapur (India) |  | \n| Coordinates: 28°58′29.127″N 79°23′47.273″E / 28.974",
+          "relevance": 32,
+          "credibility": 50,
+          "temporal": 50,
+          "combined": 39,
+          "is_cited": false,
+          "url": "https://en.wikipedia.org/wiki/Rudrapur%2C_Uttarakhand"
+        }
+      ],
+      "source_mode": "Live Web Search",
+      "abstained": false,
+      "abstention_reasons": [],
+      "faithfulness_score": 100,
+      "is_supported": true,
+      "nli_status": "Passed",
+      "evidence_scoring": {
+        "relevance": 47,
+        "credibility": 50,
+        "temporal": 50,
+        "combined": 48,
+        "formula": "0.60 × Rel. + 0.25 × Cred. + 0.15 × Temp."
+      },
+      "pipeline_stages": [
+        {
+          "name": "Claim extraction",
+          "time_ms": 0
+        },
+        {
+          "name": "Hybrid retrieval",
+          "time_ms": 0
+        },
+        {
+          "name": "Evidence scoring",
+          "time_ms": 0
+        },
+        {
+          "name": "LLM verification",
+          "time_ms": 1
+        },
+        {
+          "name": "NLI faithfulness gate",
+          "time_ms": 0
+        }
+      ],
+      "completed_at": "November 16, 2026 at 10:30 AM",
+      "disclaimer": "VERITAS assists human judgment and does not guarantee factual correctness."
+    }
+  },
+  {
+    "id": "veritas_230829999",
+    "claim": "uk is uttarakhand",
+    "verdict": "UNVERIFIED",
+    "confidence": 0,
+    "date": "November 16, 2026",
+    "evidence": 0,
+    "result": {
+      "id": "veritas_230829999",
+      "claim": "uk is uttarakhand",
+      "verdict": "UNVERIFIED",
+      "confidence": 0,
+      "explanation": "The retrieved evidence passages do not contain information directly addressing the claim 'uk is uttarakhand'. Under VERITAS closed-world constraints, the system abstains from verifying claims without sufficient direct evidence.",
+      "evidence_cards": [],
+      "source_mode": "Benchmark Corpus",
+      "abstained": true,
+      "abstention_reasons": [],
+      "faithfulness_score": 100,
+      "is_supported": false,
+      "nli_status": "Abstained",
+      "evidence_scoring": {
+        "relevance": 0,
+        "credibility": 0,
+        "temporal": 0,
+        "combined": 0,
+        "formula": "0.60 × Rel. + 0.25 × Cred. + 0.15 × Temp."
+      },
+      "pipeline_stages": [
+        {
+          "name": "Claim extraction",
+          "time_ms": 0
+        },
+        {
+          "name": "Hybrid retrieval",
+          "time_ms": 0
+        },
+        {
+          "name": "Evidence scoring",
+          "time_ms": 0
+        },
+        {
+          "name": "LLM verification",
+          "time_ms": 0
+        },
+        {
+          "name": "NLI faithfulness gate",
+          "time_ms": 0
+        }
+      ],
+      "completed_at": "November 16, 2026 at 10:30 AM",
+      "disclaimer": "VERITAS assists human judgment and does not guarantee factual correctness."
+    }
+  },
+  {
+    "id": "veritas_315874009",
+    "claim": "uk is uttarakhand",
+    "verdict": "UNVERIFIED",
+    "confidence": 0,
+    "date": "November 16, 2026",
+    "evidence": 0,
+    "result": {
+      "id": "veritas_315874009",
+      "claim": "uk is uttarakhand",
+      "verdict": "UNVERIFIED",
+      "confidence": 0,
+      "explanation": "Verification failed with an internal error: API key not found. Please set environment variable 'OPENAI_API_KEY' or 'VERITAS_API_KEY', or pass api_key to client initialization.",
+      "evidence_cards": [],
+      "source_mode": "Benchmark Corpus",
+      "abstained": true,
+      "abstention_reasons": [],
+      "faithfulness_score": 100,
+      "is_supported": false,
+      "nli_status": "Abstained",
+      "evidence_scoring": {
+        "relevance": 0,
+        "credibility": 0,
+        "temporal": 0,
+        "combined": 0,
+        "formula": "0.60 × Rel. + 0.25 × Cred. + 0.15 × Temp."
+      },
+      "pipeline_stages": [
+        {
+          "name": "Claim extraction",
+          "time_ms": 0
+        },
+        {
+          "name": "Hybrid retrieval",
+          "time_ms": 0
+        },
+        {
+          "name": "Evidence scoring",
+          "time_ms": 0
+        },
+        {
+          "name": "LLM verification",
+          "time_ms": 0
+        },
+        {
+          "name": "NLI faithfulness gate",
+          "time_ms": 0
+        }
+      ],
+      "completed_at": "November 16, 2026 at 10:27 AM",
+      "disclaimer": "VERITAS assists human judgment and does not guarantee factual correctness."
+    }
+  },
+  {
     "id": "veritas_411425820",
     "claim": "modi is pm of india",
     "verdict": "TRUE",
