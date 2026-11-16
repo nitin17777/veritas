@@ -1,0 +1,10 @@
+{
+  "description": "Verify news and factual claims with AI-powered analysis that surfaces source credibility, supporting evidence, confidence, and uncertainty for informed decisions.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

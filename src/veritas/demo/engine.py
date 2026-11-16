@@ -101,9 +101,10 @@ class VeritasDemoEngine:
             pipe_cfg = PipelineConfig.from_dict(self.raw_config)
             eff_retriever = retriever
             if eff_retriever is None:
-                # Check if default BM25 directory exists; if not, fallback to fixture retriever
+                # Check if default BM25 directory exists and has passages; if not, fallback to fixture retriever
                 bm25_path = ROOT_DIR / pipe_cfg.bm25_index_dir
-                if not bm25_path.is_dir():
+                passages_file = bm25_path / "passages.jsonl"
+                if not bm25_path.is_dir() or not passages_file.exists() or passages_file.stat().st_size == 0:
                     eff_retriever = build_fixture_retriever()
 
             self.pipeline = VeritasPipeline(

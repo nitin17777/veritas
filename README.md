@@ -154,7 +154,31 @@ python scripts/build_dense_index.py \
 Download **LIAR**: https://www.cs.ucsb.edu/~william/data/liar_dataset.zip  
 Download **FEVER**: https://fever.ai/dataset/fever.html
 
-### 3. Run the Streamlit demo
+### 3. Run the Modern VERITAS Web Application (Figma-Engineered React UI)
+
+The new frontend is a responsive React application built with TypeScript, Tailwind CSS, and Vite, served by a Starlette REST API:
+
+```bash
+# Start the unified server (serves both REST API and compiled React UI):
+python -m uvicorn app.api_server:app --port 8000 --host 0.0.0.0
+
+# Open http://localhost:8000 in your browser.
+```
+
+To run the frontend in development mode with hot-reloading:
+```bash
+# In one terminal, start the API backend:
+python -m uvicorn app.api_server:app --port 8000
+
+# In a second terminal, start Vite dev server:
+cd frontend
+npm install
+npm run dev
+
+# Open the Vite URL shown (e.g. http://localhost:8443)
+```
+
+### 3b. Legacy Streamlit demo (optional)
 
 ```bash
 # Windows
