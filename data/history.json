@@ -1,1 +1,189 @@
-[]
+[
+  {
+    "id": "veritas_411425820",
+    "claim": "modi is pm of india",
+    "verdict": "TRUE",
+    "confidence": 90,
+    "date": "November 16, 2026",
+    "evidence": 5,
+    "result": {
+      "id": "veritas_411425820",
+      "claim": "modi is pm of india",
+      "verdict": "TRUE",
+      "confidence": 90,
+      "explanation": "Evidence passage [live_web_1_wikipedia_org] supports the claim: 'PM Narendra Modi (film)\n| PM Narendra Modi |  | \n|---|---|\n| Directed by | Omung Kumar | \n| Written by |  | \n| Screenplay by |  | \n| Story by | Sandip Singh | \n| Starring | Vivek Oberoi Zarina Wahab |...' [E1].",
+      "evidence_cards": [
+        {
+          "id": "E1",
+          "passage_id": "live_web_1_wikipedia_org",
+          "source": "Wikipedia",
+          "domain": "wikipedia.org",
+          "date": "Date unspecified",
+          "tier": "Tier 3: Mainstream / General",
+          "stance": "Supports claim",
+          "quote": "PM Narendra Modi (film)\n| PM Narendra Modi |  | \n|---|---|\n| Directed by | Omung Kumar | \n| Written by |  | \n| Screenplay by |  | \n| Story by | Sandip Singh | \n| Starring | Vivek Oberoi Zarina Wahab |",
+          "relevance": 80,
+          "credibility": 50,
+          "temporal": 50,
+          "combined": 68,
+          "is_cited": true,
+          "url": "https://en.wikipedia.org/wiki/PM_Narendra_Modi_%28film%29"
+        },
+        {
+          "id": "E2",
+          "passage_id": "live_web_2_wikipedia_org",
+          "source": "Wikipedia",
+          "domain": "wikipedia.org",
+          "date": "Date unspecified",
+          "tier": "Tier 3: Mainstream / General",
+          "stance": "Provides context",
+          "quote": "List of awards and honours received by Narendra Modi\n| Narendra Modi |  | \n|---|---|\n| Born | Narendra Damodardas Modi 17 September 1950 Vadnagar, Bombay State, India | \n| Education | Delhi University",
+          "relevance": 50,
+          "credibility": 50,
+          "temporal": 50,
+          "combined": 50,
+          "is_cited": false,
+          "url": "https://en.wikipedia.org/wiki/List_of_awards_and_honours_received_by_Narendra_Modi"
+        },
+        {
+          "id": "E3",
+          "passage_id": "live_web_3_wikipedia_org",
+          "source": "Wikipedia",
+          "domain": "wikipedia.org",
+          "date": "Date unspecified",
+          "tier": "Tier 3: Mainstream / General",
+          "stance": "Provides context",
+          "quote": "Narendra Modi\n| Narendra Modi |  | \n|---|---|\n| Prime Minister of India |  | \n| Assumed office 26 May 2014 |  | \n| President | Pranab Mukherjee Ram Nath Kovind Droupadi Murmu | \n| Vice President |  |",
+          "relevance": 40,
+          "credibility": 50,
+          "temporal": 50,
+          "combined": 44,
+          "is_cited": false,
+          "url": "https://en.wikipedia.org/wiki/Narendra_Modi"
+        },
+        {
+          "id": "E4",
+          "passage_id": "live_web_4_wikipedia_org",
+          "source": "Wikipedia",
+          "domain": "wikipedia.org",
+          "date": "Date unspecified",
+          "tier": "Tier 3: Mainstream / General",
+          "stance": "Provides context",
+          "quote": "List of international prime ministerial trips made by Narendra Modi\n| Incumbent Chief Ministership Premiership (Timeline) Budgets Constitutional amendments National policy Campaigns Missions Establish",
+          "relevance": 35,
+          "credibility": 50,
+          "temporal": 50,
+          "combined": 41,
+          "is_cited": false,
+          "url": "https://en.wikipedia.org/wiki/List_of_international_prime_ministerial_trips_made_by_Narendra_Modi"
+        },
+        {
+          "id": "E5",
+          "passage_id": "live_web_5_wikipedia_org",
+          "source": "Wikipedia",
+          "domain": "wikipedia.org",
+          "date": "Date unspecified",
+          "tier": "Tier 3: Mainstream / General",
+          "stance": "Provides context",
+          "quote": "Jashodaben Modi\n| Jashodaben Modi |  | \n|---|---|\n| Spouse of the Prime Minister of India |  | \n| Assumed role 26 May 2014 |  | \n| Prime Minister | Narendra Modi | \n| Preceded by | Gursharan Kaur | \n|",
+          "relevance": 32,
+          "credibility": 50,
+          "temporal": 50,
+          "combined": 39,
+          "is_cited": false,
+          "url": "https://en.wikipedia.org/wiki/Jashodaben_Modi"
+        }
+      ],
+      "source_mode": "Live Web Search",
+      "abstained": false,
+      "abstention_reasons": [],
+      "faithfulness_score": 100,
+      "is_supported": true,
+      "nli_status": "Passed",
+      "evidence_scoring": {
+        "relevance": 47,
+        "credibility": 50,
+        "temporal": 50,
+        "combined": 48,
+        "formula": "0.60 × Rel. + 0.25 × Cred. + 0.15 × Temp."
+      },
+      "pipeline_stages": [
+        {
+          "name": "Claim extraction",
+          "time_ms": 0
+        },
+        {
+          "name": "Hybrid retrieval",
+          "time_ms": 0
+        },
+        {
+          "name": "Evidence scoring",
+          "time_ms": 0
+        },
+        {
+          "name": "LLM verification",
+          "time_ms": 1
+        },
+        {
+          "name": "NLI faithfulness gate",
+          "time_ms": 0
+        }
+      ],
+      "completed_at": "November 16, 2026 at 10:22 AM",
+      "disclaimer": "VERITAS assists human judgment and does not guarantee factual correctness."
+    }
+  },
+  {
+    "id": "veritas_617047753",
+    "claim": "modi  is pm of india",
+    "verdict": "UNVERIFIED",
+    "confidence": 0,
+    "date": "November 16, 2026",
+    "evidence": 0,
+    "result": {
+      "id": "veritas_617047753",
+      "claim": "modi  is pm of india",
+      "verdict": "UNVERIFIED",
+      "confidence": 0,
+      "explanation": "The retrieved evidence passages do not contain information directly addressing the claim 'modi  is pm of india'. Under VERITAS closed-world constraints, the system abstains from verifying claims without sufficient direct evidence.",
+      "evidence_cards": [],
+      "source_mode": "Benchmark Corpus",
+      "abstained": true,
+      "abstention_reasons": [],
+      "faithfulness_score": 100,
+      "is_supported": false,
+      "nli_status": "Abstained",
+      "evidence_scoring": {
+        "relevance": 0,
+        "credibility": 0,
+        "temporal": 0,
+        "combined": 0,
+        "formula": "0.60 × Rel. + 0.25 × Cred. + 0.15 × Temp."
+      },
+      "pipeline_stages": [
+        {
+          "name": "Claim extraction",
+          "time_ms": 0
+        },
+        {
+          "name": "Hybrid retrieval",
+          "time_ms": 2
+        },
+        {
+          "name": "Evidence scoring",
+          "time_ms": 1
+        },
+        {
+          "name": "LLM verification",
+          "time_ms": 1
+        },
+        {
+          "name": "NLI faithfulness gate",
+          "time_ms": 0
+        }
+      ],
+      "completed_at": "November 16, 2026 at 10:21 AM",
+      "disclaimer": "VERITAS assists human judgment and does not guarantee factual correctness."
+    }
+  }
+]

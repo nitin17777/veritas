@@ -80,6 +80,39 @@ ${result.disclaimer}
     });
   };
 
+  const handleDownloadReport = () => {
+    const report = `# VERITAS Verification Report
+Claim: "${result.claim}"
+Verdict: ${result.verdict} (Confidence: ${result.confidence}%)
+Completed: ${result.completed_at || "Recent"}
+
+## Explanation
+${result.explanation}
+
+## Evidence Summary
+- Relevance: ${result.evidence_scoring?.relevance || 0}%
+- Source Credibility: ${result.evidence_scoring?.credibility || 0}%
+- Temporal Validity: ${result.evidence_scoring?.temporal || 0}%
+- Combined Score: ${result.evidence_scoring?.combined || 0}%
+
+## Cited Sources
+${result.evidence_cards.length > 0
+  ? result.evidence_cards.map((ev) => `- [${ev.id}] ${ev.source} (${ev.domain}): "${ev.quote}" (Combined: ${ev.combined}%)`).join("\n")
+  : "No cited sources."}
+
+${result.disclaimer}
+`;
+    const blob = new Blob([report], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `veritas_report_${Date.now()}.md`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
@@ -124,6 +157,10 @@ ${result.disclaimer}
         title="Verification result"
         description={`Completed ${result.completed_at || "recently"}`}
       >
+        <button className="btn btn-secondary" onClick={handleDownloadReport} type="button" title="Download markdown report">
+          <Icon name="file" size={16} />
+          Download .md
+        </button>
         <button className="btn btn-secondary" onClick={handleShare} type="button">
           <Icon name="share" size={16} />
           Share
@@ -282,8 +319,16 @@ ${result.disclaimer}
                   );
                 })
               ) : (
-                <div className="card" style={{ padding: "2rem", textAlign: "center", color: "var(--muted)" }}>
-                  No evidence passages retrieved for this claim.
+                <div className="card" style={{ padding: "2.5rem 1.5rem", textAlign: "center" }}>
+                  <div style={{ display: "inline-flex", padding: "0.75rem", background: "var(--surface)", borderRadius: "50%", marginBottom: "0.75rem", color: "var(--muted)" }}>
+                    <Icon name="search" size={24} />
+                  </div>
+                  <h3 style={{ fontSize: "1.05rem", fontWeight: 600, marginBottom: "0.35rem" }}>
+                    No correlated evidence found in benchmark index
+                  </h3>
+                  <p style={{ color: "var(--muted)", fontSize: "0.9rem", maxWidth: "440px", margin: "0 auto 1.25rem auto", lineHeight: 1.5 }}>
+                    Under strict VERITAS closed-world constraints, the system abstains from guessing when facts are absent from the local corpus.
+                  </p>
                 </div>
               )}
             </div>

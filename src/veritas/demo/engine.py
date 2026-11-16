@@ -98,7 +98,9 @@ class VeritasDemoEngine:
         if pipeline is not None:
             self.pipeline = pipeline
         else:
-            pipe_cfg = PipelineConfig.from_dict(self.raw_config)
+            # Flatten demo sections so PipelineConfig can find benchmark/scoring/faithfulness
+            pipe_dict = {**self.demo_cfg, **self.raw_config}
+            pipe_cfg = PipelineConfig.from_dict(pipe_dict)
             eff_retriever = retriever
             if eff_retriever is None:
                 # Check if default BM25 directory exists and has passages; if not, fallback to fixture retriever

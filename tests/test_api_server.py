@@ -52,12 +52,6 @@ def test_determine_stance() -> None:
 def test_load_history() -> None:
     history = load_history()
     assert isinstance(history, list)
-    assert len(history) > 0
-    first = history[0]
-    assert "claim" in first
-    assert "verdict" in first
-    assert "confidence" in first
-    assert "result" in first
 
 
 def test_verify_and_enrich() -> None:

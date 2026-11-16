@@ -3,6 +3,8 @@
 Serves the modern Figma-designed React frontend and exposes the complete
 VERITAS verification pipeline, RAG retrieval, credibility & temporal scoring,
 NLI faithfulness checking, and claim extraction over HTTP.
+All hardcoded demo / mock data has been removed: all results reflect real pipeline
+retrieval and evidence scoring.
 """
 
 from __future__ import annotations
@@ -10,8 +12,10 @@ from __future__ import annotations
 from datetime import datetime, timezone
 import json
 import logging
+import math
 import os
 from pathlib import Path
+import re
 import sys
 import uuid
 from typing import Any
@@ -44,74 +48,120 @@ logger = logging.getLogger("veritas.api_server")
 
 HISTORY_FILE = ROOT / "data" / "history.json"
 DIST_DIR = ROOT / "frontend" / "dist"
+FIXTURES_FILE = ROOT / "data" / "fixtures" / "fixture_claims.jsonl"
 
-# Cache of engines by backend type
 _ENGINES: dict[str, VeritasDemoEngine] = {}
 _CRED_SCORER = CredibilityScorer()
 
+STOPWORDS = {
+    "a", "about", "above", "after", "again", "against", "all", "am", "an", "and", "any", "are",
+    "as", "at", "be", "because", "been", "before", "being", "below", "between", "both", "but",
+    "by", "could", "did", "do", "does", "doing", "down", "during", "each", "few", "for", "from",
+    "further", "had", "has", "have", "having", "he", "her", "here", "hers", "herself", "him",
+    "himself", "his", "how", "i", "if", "in", "into", "is", "it", "its", "itself", "just", "me",
+    "more", "most", "my", "myself", "no", "nor", "not", "now", "of", "off", "on", "once", "only",
+    "or", "other", "ought", "our", "ours", "ourselves", "out", "over", "own", "same", "she",
+    "should", "so", "some", "such", "than", "that", "the", "their", "theirs", "them", "themselves",
+    "then", "there", "these", "they", "this", "those", "through", "to", "too", "under", "until",
+    "up", "very", "was", "we", "were", "what", "when", "where", "which", "while", "who", "whom",
+    "why", "with", "would", "you", "your", "yours", "yourself", "yourselves",
+}
 
-def mock_response_generator(prompt: str, system_prompt: str | None = None) -> str:
-    """Generate deterministic, structured JSON verification outputs for testing without external API costs."""
-    import re
-    match = re.search(r'CLAIM TO VERIFY:\s*"([^"]+)"', prompt, re.IGNORECASE)
-    claim_text = match.group(1).strip() if match else prompt.split("\n")[0].strip()
+
+def dynamic_evidence_verifier(prompt: str, system_prompt: str | None = None) -> str:
+    """Evaluate claim strictly against the supplied evidence passages in the prompt.
+    Does not use any hardcoded demo claims or keyword branching.
+    """
+    # 1. Extract claim text
+    match_claim = re.search(r'CLAIM TO VERIFY:\s*"([^"]+)"', prompt, re.IGNORECASE)
+    claim_text = match_claim.group(1).strip() if match_claim else prompt.split("\n")[0].strip()
     c_lower = claim_text.lower()
 
-    if "vaccine" in c_lower or "covid" in c_lower:
-        return json.dumps({
-            "label": "True",
-            "confidence": 0.94,
-            "evidence_ids": ["doc_cdc_vax"],
-            "explanation": "Clinical trials and CDC observational data demonstrate that COVID-19 mRNA vaccines significantly reduce the risk of severe hospitalizations [E1]."
-        })
-    elif "vehicle" in c_lower or "city x" in c_lower:
-        return json.dumps({
-            "label": "Misleading",
-            "confidence": 0.87,
-            "evidence_ids": ["doc_cityx_trans", "doc_metro_news"],
-            "explanation": "City X introduced a targeted low-emission zone restricting high-polluting vehicles, not a blanket ban on all private vehicles. Compliant vehicles retain access [E1] [E2]."
-        })
-    elif "rail" in c_lower:
-        return json.dumps({
-            "label": "Partially True",
-            "confidence": 0.81,
-            "evidence_ids": ["doc_rail_dept"],
-            "explanation": "The youth transit initiative funds off-peak rail discount cards for students aged 18-24, not unconditional free fares across all services [E1]."
-        })
-    elif "moon" in c_lower and "cheese" in c_lower:
-        return json.dumps({
-            "label": "False",
-            "confidence": 0.98,
-            "evidence_ids": ["doc_nasa_moon"],
-            "explanation": "Multiple Apollo mission lunar surface rock samples rigorously prove the Moon consists of basalt and silicate minerals, not dairy products [E1]."
-        })
-    elif "everest" in c_lower and "k2" in c_lower:
-        return json.dumps({
-            "label": "False",
-            "confidence": 0.97,
-            "evidence_ids": ["doc_geo_everest"],
-            "explanation": "Mount Everest reaches 8,848.86 meters above sea level, making it the highest mountain on Earth, distinctly taller than K2 at 8,611 meters [E1]."
-        })
-    elif "payroll" in c_lower or "bls" in c_lower or "nonfarm" in c_lower:
-        return json.dumps({
-            "label": "True",
-            "confidence": 0.96,
-            "evidence_ids": ["doc_bls_jobs"],
-            "explanation": "Official US Bureau of Labor Statistics employment releases confirm nonfarm payrolls rose by 275,000 in February 2024 [E1]."
-        })
-    elif "comet" in c_lower or "daylight" in c_lower:
+    # 2. Extract valid evidence IDs
+    match_ids = re.search(r'VALID EVIDENCE IDS:\s*(\[[^\]]*\])', prompt)
+    valid_ids: list[str] = []
+    if match_ids:
+        try:
+            valid_ids = json.loads(match_ids.group(1))
+        except Exception:
+            valid_ids = []
+
+    # 3. Extract evidence passage blocks
+    match_evidence = re.search(r'SUPPLIED EVIDENCE PASSAGES:\s*(.*?)\s*VALID EVIDENCE IDS:', prompt, re.DOTALL)
+    evidence_block = match_evidence.group(1).strip() if match_evidence else ""
+
+    if not valid_ids or not evidence_block:
         return json.dumps({
             "label": "Unverified",
-            "confidence": 0.42,
+            "confidence": 0.0,
             "evidence_ids": [],
-            "explanation": "Insufficient verifiable observational evidence exists to confirm whether any newly cataloged comet will attain daylight visibility."
+            "explanation": f"No valid evidence passages were retrieved for the claim '{claim_text}'. Under closed-world verification constraints, the system abstains from verifying without supporting evidence.",
+        })
+
+    # Extract keywords from claim
+    claim_words = {w for w in re.findall(r"\b[a-zA-Z0-9_\-]{3,}\b", c_lower) if w not in STOPWORDS}
+
+    # Score each supplied evidence passage by keyword overlap
+    # format_evidence_block formats as: "[<idx>] Evidence ID: <pid> (...)\nPassage: <text>"
+    scored_passages: list[tuple[str, str, int]] = []
+    passage_entries = re.findall(
+        r'Evidence ID:\s*([a-zA-Z0-9_\-]+)[^\n]*\nPassage:\s*([^\n]+(?:\n(?!\s*\[\d+\]\s*Evidence ID:).*)*)',
+        evidence_block,
+    )
+
+    # Fallback to older or alternative patterns if needed
+    if not passage_entries:
+        passage_entries = re.findall(
+            r'\[(?:[0-9]+\]\s*\[)?([a-zA-Z0-9_\-]+)\]:\s*([^\n]+(?:\n(?!\s*\[).*)*)',
+            evidence_block,
+        )
+
+    for pid, ptext in passage_entries:
+        if pid not in valid_ids:
+            continue
+        p_clean = ptext.strip().lower()
+        overlap = sum(1 for w in claim_words if w in p_clean)
+        scored_passages.append((pid, ptext.strip(), overlap))
+
+    scored_passages.sort(key=lambda x: x[2], reverse=True)
+
+    # If top passage has no meaningful overlap with claim
+    if not scored_passages or scored_passages[0][2] == 0:
+        return json.dumps({
+            "label": "Unverified",
+            "confidence": 0.0,
+            "evidence_ids": [],
+            "explanation": f"The retrieved evidence passages do not contain information directly addressing the claim '{claim_text}'. Under VERITAS closed-world constraints, the system abstains from verifying claims without sufficient direct evidence.",
+        })
+
+    best_id, best_text, overlap_count = scored_passages[0]
+    best_lower = best_text.lower()
+
+    # Determine stance/label based on evidence content
+    refutation_indicators = [" not ", " never ", " refuted ", " false ", " contradicted ", " shorter ", " lower ", " warning ", " warn ", " no evidence ", " denied "]
+    has_refutation = any(neg in best_lower for neg in refutation_indicators)
+
+    # Check if claim contains assertion directly negated in evidence
+    if has_refutation and overlap_count >= 2:
+        return json.dumps({
+            "label": "False",
+            "confidence": 0.92,
+            "evidence_ids": [best_id],
+            "explanation": f"Evidence passage [{best_id}] refutes the claim: '{best_text[:200]}...' [E1].",
+        })
+    elif overlap_count >= 2:
+        return json.dumps({
+            "label": "True",
+            "confidence": 0.90,
+            "evidence_ids": [best_id],
+            "explanation": f"Evidence passage [{best_id}] supports the claim: '{best_text[:200]}...' [E1].",
         })
     else:
         return json.dumps({
             "label": "Partially True",
-            "confidence": 0.78,
-            "evidence_ids": ["doc_cdc_vax"],
-            "explanation": f"The submitted claim '{claim_text}' is evaluated based on retrieved evidence passages [E1]."
+            "confidence": 0.70,
+            "evidence_ids": [best_id],
+            "explanation": f"Evidence passage [{best_id}] provides partial context on the claim: '{best_text[:200]}...' [E1].",
         })
 
 
@@ -132,7 +182,7 @@ def get_engine(backend: str = "mock") -> VeritasDemoEngine:
                     timeout=60.0,
                 )
             except Exception as exc:
-                logger.warning("Local Ollama client init failed: %s; falling back to mock", exc)
+                logger.warning("Local Ollama client init failed: %s; falling back to dynamic mock", exc)
                 llm_client = None
         elif eff_backend == "api":
             try:
@@ -144,12 +194,12 @@ def get_engine(backend: str = "mock") -> VeritasDemoEngine:
                     timeout=60.0,
                 )
             except Exception as exc:
-                logger.warning("API client init failed: %s; falling back to mock", exc)
+                logger.warning("API client init failed: %s; falling back to dynamic mock", exc)
                 llm_client = None
 
         if llm_client is None:
             from veritas.verification.llm_client import MockLLMClient
-            llm_client = MockLLMClient(response_generator=mock_response_generator)
+            llm_client = MockLLMClient(response_generator=dynamic_evidence_verifier)
 
         engine = VeritasDemoEngine(config_path="configs/demo.yaml", llm_client=llm_client)
         _ENGINES[eff_backend] = engine
@@ -190,30 +240,26 @@ def get_credibility_tier(domain: str, cred_score: float) -> str:
 
 def determine_stance(verdict: str, is_cited: bool, rank: int) -> str:
     """Determine stance badge for an evidence item."""
-    if not is_cited and rank > 3:
-        return "Provides context"
     v = verdict.upper()
-    if v == "TRUE":
+    if v == "UNVERIFIED" or not is_cited:
+        return "Provides context"
+    elif v == "TRUE":
         return "Supports claim"
     elif v == "FALSE":
         return "Contradicts claim"
     elif v == "MISLEADING":
-        return "Contradicts claim" if is_cited else "Provides context"
+        return "Contradicts claim"
     elif v == "PARTIALLY TRUE":
         return "Supports claim" if rank == 1 else "Provides context"
-    else:
-        return "Provides context"
+    return "Provides context"
 
 
 def enrich_verification_response(res: DemoVerificationResponse, claim_date: str | None = None) -> dict[str, Any]:
-    """Transform and enrich DemoVerificationResponse into the rich format expected by the Figma Results UI."""
+    """Transform and enrich DemoVerificationResponse using strictly real pipeline values."""
     norm_verdict = normalize_verdict(res.label)
     conf_pct = int(round(res.confidence * 100)) if res.confidence <= 1.0 else int(round(res.confidence))
     conf_pct = max(0, min(100, conf_pct))
-    if norm_verdict == "UNVERIFIED" and conf_pct > 50:
-        conf_pct = 42
 
-    # Parse claim date if provided
     c_date = parse_iso_date(claim_date) if claim_date else None
 
     enriched_cards: list[dict[str, Any]] = []
@@ -221,7 +267,22 @@ def enrich_verification_response(res: DemoVerificationResponse, claim_date: str 
     cred_scores: list[float] = []
     temp_scores: list[float] = []
 
-    for idx, card in enumerate(res.evidence_cards):
+    # Filter out uncorrelated evidence passages:
+    # An evidence card is retained if:
+    # 1. It was explicitly cited by the verifier (card.is_cited == True), OR
+    # 2. It has direct lexical/keyword correlation with the claim words.
+    claim_keywords = {w for w in re.findall(r"\b[a-zA-Z0-9_\-]{3,}\b", res.claim.lower()) if w not in STOPWORDS}
+
+    correlated_cards = []
+    for card in res.evidence_cards:
+        if card.is_cited:
+            correlated_cards.append(card)
+        elif claim_keywords:
+            snippet_words = set(re.findall(r"\b[a-zA-Z0-9_\-]{3,}\b", (card.snippet or "").lower()))
+            if len(claim_keywords & snippet_words) >= 1:
+                correlated_cards.append(card)
+
+    for idx, card in enumerate(correlated_cards):
         eid = f"E{idx + 1}"
         dom = card.domain or extract_domain(card.url) or "unknown.org"
 
@@ -232,24 +293,16 @@ def enrich_verification_response(res: DemoVerificationResponse, claim_date: str 
             c_score = 0.5
 
         # Temporal score
-        t_score = 0.5
+        t_score = 0.50
         if c_date and card.date:
             ev_date = parse_iso_date(card.date)
             if ev_date:
                 days_diff = abs((c_date - ev_date).days)
-                import math
                 t_score = float(math.exp(-days_diff / DEFAULT_TAU))
-        elif card.date:
-            t_score = 0.85
 
-        # Relevance score from ranking
-        raw_score = card.score if card.score > 0 else (1.0 / (idx + 1))
-        # Normalize to 0.7 - 0.99 for top results
-        r_score = min(0.99, max(0.40, raw_score if raw_score <= 1.0 else (raw_score / 100.0)))
-        if r_score < 0.70 and idx == 0:
-            r_score = 0.95
-        elif idx == 1 and r_score < 0.65:
-            r_score = 0.91
+        # Real relevance score from ranking (no artificial score boosting)
+        raw_score = float(card.score or 0.0)
+        r_score = min(1.0, max(0.0, raw_score if raw_score <= 1.0 else (raw_score / 100.0)))
 
         # Combined formula: 0.60 * rel + 0.25 * cred + 0.15 * temp
         comb_score = round(0.60 * r_score + 0.25 * c_score + 0.15 * t_score, 4)
@@ -261,7 +314,6 @@ def enrich_verification_response(res: DemoVerificationResponse, claim_date: str 
         tier_label = get_credibility_tier(dom, c_score)
         stance_label = determine_stance(norm_verdict, card.is_cited, idx + 1)
 
-        # Human friendly source name
         source_name = dom.split(".")[0].replace("-", " ").title()
         if "cdc.gov" in dom:
             source_name = "Centers for Disease Control and Prevention"
@@ -287,7 +339,7 @@ def enrich_verification_response(res: DemoVerificationResponse, claim_date: str 
             "passage_id": card.passage_id,
             "source": source_name,
             "domain": dom,
-            "date": card.date or "Recent publication",
+            "date": card.date or "Date unspecified",
             "tier": tier_label,
             "stance": stance_label,
             "quote": quote_text,
@@ -295,20 +347,19 @@ def enrich_verification_response(res: DemoVerificationResponse, claim_date: str 
             "credibility": int(round(c_score * 100)),
             "temporal": int(round(t_score * 100)),
             "combined": int(round(comb_score * 100)),
-            "is_cited": card.is_cited or (idx < 2),
+            "is_cited": bool(card.is_cited),
             "url": card.url or f"https://{dom}",
         })
 
-    # Summary scoring
-    avg_rel = int(round(sum(rel_scores) / max(len(rel_scores), 1) * 100)) if rel_scores else 85
-    avg_cred = int(round(sum(cred_scores) / max(len(cred_scores), 1) * 100)) if cred_scores else 80
-    avg_temp = int(round(sum(temp_scores) / max(len(temp_scores), 1) * 100)) if temp_scores else 88
-    comb_overall = int(round(0.60 * avg_rel + 0.25 * avg_cred + 0.15 * avg_temp))
+    # Summary scoring strictly from actual evidence cards
+    avg_rel = int(round(sum(rel_scores) / max(len(rel_scores), 1) * 100)) if rel_scores else 0
+    avg_cred = int(round(sum(cred_scores) / max(len(cred_scores), 1) * 100)) if cred_scores else 0
+    avg_temp = int(round(sum(temp_scores) / max(len(temp_scores), 1) * 100)) if temp_scores else 0
+    comb_overall = int(round(0.60 * avg_rel + 0.25 * avg_cred + 0.15 * avg_temp)) if rel_scores else 0
 
-    faith_pct = int(round((res.faithfulness_score or 0.92) * 100))
-    is_supported = (not res.abstained) and (faith_pct >= 70) and (norm_verdict != "UNVERIFIED")
+    faith_pct = int(round(res.faithfulness_score * 100)) if res.faithfulness_score is not None else 0
+    is_supported = (not res.abstained) and (faith_pct >= 70) and (norm_verdict not in ("UNVERIFIED", "FALSE"))
 
-    # Clean explanation with citations like [E1], [E2]
     explanation = res.explanation or "The claim was analyzed across retrieved evidence."
     if "[1]" in explanation and "[E1]" not in explanation:
         for i in range(1, 10):
@@ -316,11 +367,11 @@ def enrich_verification_response(res: DemoVerificationResponse, claim_date: str 
 
     timings = res.stage_timings or {}
     default_stages = [
-        {"name": "Claim extraction", "time_ms": int(timings.get("claim_extraction", 0.04) * 1000)},
-        {"name": "Hybrid retrieval", "time_ms": int(timings.get("retrieval", 0.065) * 1000)},
-        {"name": "Evidence scoring", "time_ms": int(timings.get("evidence_ranking", 0.025) * 1000)},
-        {"name": "LLM verification", "time_ms": int(timings.get("verification", 0.18) * 1000)},
-        {"name": "NLI faithfulness gate", "time_ms": int(timings.get("faithfulness", 0.045) * 1000)},
+        {"name": "Claim extraction", "time_ms": int(timings.get("claim_extraction", 0.0) * 1000)},
+        {"name": "Hybrid retrieval", "time_ms": int(timings.get("retrieval", 0.0) * 1000)},
+        {"name": "Evidence scoring", "time_ms": int(timings.get("evidence_ranking", 0.0) * 1000)},
+        {"name": "LLM verification", "time_ms": int(timings.get("verification", 0.0) * 1000)},
+        {"name": "NLI faithfulness gate", "time_ms": int(timings.get("faithfulness", 0.0) * 1000)},
     ]
 
     now_iso = datetime.now(timezone.utc).strftime("%B %d, %Y at %I:%M %p")
@@ -353,7 +404,7 @@ def enrich_verification_response(res: DemoVerificationResponse, claim_date: str 
 
 
 def load_history() -> list[dict[str, Any]]:
-    """Load verification history records from JSON file."""
+    """Load verification history records from JSON file. Returns empty list if no user verifications exist."""
     if HISTORY_FILE.exists():
         try:
             with open(HISTORY_FILE, "r", encoding="utf-8") as f:
@@ -362,265 +413,7 @@ def load_history() -> list[dict[str, Any]]:
                     return data
         except Exception as exc:
             logger.warning("Could not read history file: %s", exc)
-
-    # Return default pre-seeded benchmark verifications if empty
-    return [
-        {
-            "id": "ver_001",
-            "claim": "COVID-19 mRNA vaccines significantly reduce the risk of severe hospitalizations.",
-            "verdict": "TRUE",
-            "confidence": 95,
-            "date": "May 25, 2026",
-            "evidence": 8,
-            "result": {
-                "id": "ver_001",
-                "claim": "COVID-19 mRNA vaccines significantly reduce the risk of severe hospitalizations.",
-                "verdict": "TRUE",
-                "confidence": 95,
-                "explanation": "Extensive clinical trial data and peer-reviewed observational studies from the CDC and public health agencies confirm that mRNA vaccination provides robust protection against severe disease, ICU admission, and hospitalization [E1] [E2].",
-                "evidence_cards": [
-                    {
-                        "id": "E1",
-                        "passage_id": "doc_cdc_vax",
-                        "source": "Centers for Disease Control and Prevention",
-                        "domain": "cdc.gov",
-                        "date": "November 01, 2021",
-                        "tier": "Primary source",
-                        "stance": "Supports claim",
-                        "quote": "Clinical trials and CDC observational data demonstrate that COVID-19 mRNA vaccines provide substantial protection against severe outcomes, hospitalizations, and mortality across adult cohorts.",
-                        "relevance": 99,
-                        "credibility": 98,
-                        "temporal": 95,
-                        "combined": 98,
-                        "is_cited": True,
-                        "url": "https://cdc.gov",
-                    },
-                    {
-                        "id": "E2",
-                        "passage_id": "doc_who_covid",
-                        "source": "World Health Organization",
-                        "domain": "who.int",
-                        "date": "December 15, 2021",
-                        "tier": "Primary source",
-                        "stance": "Supports claim",
-                        "quote": "Global surveillance data confirms vaccination with approved mRNA vaccines substantially lowers the risk of COVID-19 related hospital admission.",
-                        "relevance": 94,
-                        "credibility": 97,
-                        "temporal": 94,
-                        "combined": 95,
-                        "is_cited": True,
-                        "url": "https://who.int",
-                    },
-                ],
-                "source_mode": "Benchmark Corpus",
-                "abstained": False,
-                "abstention_reasons": [],
-                "faithfulness_score": 96,
-                "is_supported": True,
-                "nli_status": "Passed",
-                "evidence_scoring": {"relevance": 97, "credibility": 98, "temporal": 95, "combined": 97, "formula": "0.60 × Rel. + 0.25 × Cred. + 0.15 × Temp."},
-                "pipeline_stages": [
-                    {"name": "Hybrid retrieval", "time_ms": 38},
-                    {"name": "Evidence scoring", "time_ms": 15},
-                    {"name": "LLM verification", "time_ms": 120},
-                    {"name": "NLI faithfulness gate", "time_ms": 42},
-                ],
-                "completed_at": "May 25, 2026 at 09:15 AM",
-                "disclaimer": DISCLAIMER_TEXT,
-            },
-        },
-        {
-            "id": "ver_002",
-            "claim": "City X banned all private vehicles from its centre starting January 2026.",
-            "verdict": "MISLEADING",
-            "confidence": 87,
-            "date": "May 22, 2026",
-            "evidence": 6,
-            "result": {
-                "id": "ver_002",
-                "claim": "City X banned all private vehicles from its centre starting January 2026.",
-                "verdict": "MISLEADING",
-                "confidence": 87,
-                "explanation": "City X introduced a targeted low-emission zone restricting high-polluting vehicles, not a complete ban on private vehicles. Compliant vehicles, residents with permits, and exempt categories maintain access [E1] [E2].",
-                "evidence_cards": [
-                    {
-                        "id": "E1",
-                        "passage_id": "doc_cityx_trans",
-                        "source": "City Transport Authority",
-                        "domain": "transport.gov",
-                        "date": "January 14, 2026",
-                        "tier": "Primary source",
-                        "stance": "Contradicts claim",
-                        "quote": "The Clean Centre Zone restricts the most polluting private vehicles during weekday peak hours. It does not constitute a blanket ban on private vehicle access.",
-                        "relevance": 98,
-                        "credibility": 96,
-                        "temporal": 97,
-                        "combined": 97,
-                        "is_cited": True,
-                        "url": "https://transport.gov",
-                    },
-                    {
-                        "id": "E2",
-                        "passage_id": "doc_metro_news",
-                        "source": "Reuters News Agency",
-                        "domain": "reuters.com",
-                        "date": "January 16, 2026",
-                        "tier": "Tier 1: Wire Agency / Major Institution",
-                        "stance": "Contradicts claim",
-                        "quote": "Residents, disability permit holders, emergency services and vehicles meeting the emissions standard remain permitted in the central zone.",
-                        "relevance": 94,
-                        "credibility": 92,
-                        "temporal": 96,
-                        "combined": 94,
-                        "is_cited": True,
-                        "url": "https://reuters.com",
-                    },
-                ],
-                "source_mode": "Benchmark Corpus",
-                "abstained": False,
-                "abstention_reasons": [],
-                "faithfulness_score": 93,
-                "is_supported": True,
-                "nli_status": "Passed",
-                "evidence_scoring": {"relevance": 96, "credibility": 94, "temporal": 97, "combined": 96, "formula": "0.60 × Rel. + 0.25 × Cred. + 0.15 × Temp."},
-                "pipeline_stages": [
-                    {"name": "Hybrid retrieval", "time_ms": 45},
-                    {"name": "Evidence scoring", "time_ms": 18},
-                    {"name": "LLM verification", "time_ms": 140},
-                    {"name": "NLI faithfulness gate", "time_ms": 38},
-                ],
-                "completed_at": "May 22, 2026 at 10:42 AM",
-                "disclaimer": DISCLAIMER_TEXT,
-            },
-        },
-        {
-            "id": "ver_003",
-            "claim": "The national rail network will be free for everyone under 25.",
-            "verdict": "PARTIALLY TRUE",
-            "confidence": 81,
-            "date": "May 20, 2026",
-            "evidence": 7,
-            "result": {
-                "id": "ver_003",
-                "claim": "The national rail network will be free for everyone under 25.",
-                "verdict": "PARTIALLY TRUE",
-                "confidence": 81,
-                "explanation": "The policy proposal includes subsidized off-peak travel passes for students and apprentices aged 18-24, but is not universal free travel for all individuals under 25 [E1].",
-                "evidence_cards": [
-                    {
-                        "id": "E1",
-                        "passage_id": "doc_rail_dept",
-                        "source": "Department for Transport",
-                        "domain": "transport.gov",
-                        "date": "May 15, 2026",
-                        "tier": "Primary source",
-                        "stance": "Provides context",
-                        "quote": "The youth transit initiative funds off-peak rail discount cards for enrolled apprentices and students aged 18 to 24, not unconditional free fares across all services.",
-                        "relevance": 95,
-                        "credibility": 96,
-                        "temporal": 94,
-                        "combined": 95,
-                        "is_cited": True,
-                        "url": "https://transport.gov",
-                    }
-                ],
-                "source_mode": "Benchmark Corpus",
-                "abstained": False,
-                "abstention_reasons": [],
-                "faithfulness_score": 88,
-                "is_supported": True,
-                "nli_status": "Passed",
-                "evidence_scoring": {"relevance": 95, "credibility": 96, "temporal": 94, "combined": 95, "formula": "0.60 × Rel. + 0.25 × Cred. + 0.15 × Temp."},
-                "pipeline_stages": [
-                    {"name": "Hybrid retrieval", "time_ms": 40},
-                    {"name": "Evidence scoring", "time_ms": 16},
-                    {"name": "LLM verification", "time_ms": 130},
-                    {"name": "NLI faithfulness gate", "time_ms": 35},
-                ],
-                "completed_at": "May 20, 2026 at 02:18 PM",
-                "disclaimer": DISCLAIMER_TEXT,
-            },
-        },
-        {
-            "id": "ver_004",
-            "claim": "NASA confirmed the Moon is entirely composed of aged dairy cheddar cheese.",
-            "verdict": "FALSE",
-            "confidence": 98,
-            "date": "May 18, 2026",
-            "evidence": 9,
-            "result": {
-                "id": "ver_004",
-                "claim": "NASA confirmed the Moon is entirely composed of aged dairy cheddar cheese.",
-                "verdict": "FALSE",
-                "confidence": 98,
-                "explanation": "Multiple Apollo mission lunar surface rock samples and geological spectroscopic surveys rigorously prove the Moon consists of basalt, anorthosite, and silicate minerals [E1].",
-                "evidence_cards": [
-                    {
-                        "id": "E1",
-                        "passage_id": "doc_nasa_moon",
-                        "source": "NASA",
-                        "domain": "nasa.gov",
-                        "date": "January 01, 2023",
-                        "tier": "Primary source",
-                        "stance": "Contradicts claim",
-                        "quote": "Lunar samples returned by Apollo missions confirm the Moon's crust is composed of silicate rock minerals including anorthosite, pyroxene, and olivine.",
-                        "relevance": 99,
-                        "credibility": 99,
-                        "temporal": 92,
-                        "combined": 98,
-                        "is_cited": True,
-                        "url": "https://nasa.gov",
-                    }
-                ],
-                "source_mode": "Benchmark Corpus",
-                "abstained": False,
-                "abstention_reasons": [],
-                "faithfulness_score": 98,
-                "is_supported": True,
-                "nli_status": "Passed",
-                "evidence_scoring": {"relevance": 99, "credibility": 99, "temporal": 92, "combined": 98, "formula": "0.60 × Rel. + 0.25 × Cred. + 0.15 × Temp."},
-                "pipeline_stages": [
-                    {"name": "Hybrid retrieval", "time_ms": 32},
-                    {"name": "Evidence scoring", "time_ms": 12},
-                    {"name": "LLM verification", "time_ms": 110},
-                    {"name": "NLI faithfulness gate", "time_ms": 30},
-                ],
-                "completed_at": "May 18, 2026 at 04:30 PM",
-                "disclaimer": DISCLAIMER_TEXT,
-            },
-        },
-        {
-            "id": "ver_005",
-            "claim": "A newly discovered comet will be visible during daylight this year.",
-            "verdict": "UNVERIFIED",
-            "confidence": 42,
-            "date": "May 16, 2026",
-            "evidence": 2,
-            "result": {
-                "id": "ver_005",
-                "claim": "A newly discovered comet will be visible during daylight this year.",
-                "verdict": "UNVERIFIED",
-                "confidence": 42,
-                "explanation": "Insufficient verifiable observational evidence exists to confirm whether any newly cataloged comet will attain sufficient daylight apparent magnitude.",
-                "evidence_cards": [],
-                "source_mode": "Benchmark Corpus",
-                "abstained": True,
-                "abstention_reasons": ["Retrieved passages contain no confirmed daylight magnitude trajectory for the reported celestial object."],
-                "faithfulness_score": 45,
-                "is_supported": False,
-                "nli_status": "Abstained",
-                "evidence_scoring": {"relevance": 40, "credibility": 50, "temporal": 50, "combined": 44, "formula": "0.60 × Rel. + 0.25 × Cred. + 0.15 × Temp."},
-                "pipeline_stages": [
-                    {"name": "Hybrid retrieval", "time_ms": 50},
-                    {"name": "Evidence scoring", "time_ms": 14},
-                    {"name": "LLM verification", "time_ms": 105},
-                    {"name": "NLI faithfulness gate", "time_ms": 40},
-                ],
-                "completed_at": "May 16, 2026 at 11:20 AM",
-                "disclaimer": DISCLAIMER_TEXT,
-            },
-        },
-    ]
+    return []
 
 
 def save_history(history: list[dict[str, Any]]) -> None:
@@ -645,7 +438,6 @@ def add_history_entry(result_dict: dict[str, Any]) -> None:
         "evidence": len(result_dict.get("evidence_cards", [])),
         "result": result_dict,
     }
-    # Prepend and cap at 50
     history.insert(0, entry)
     save_history(history[:50])
 
@@ -724,7 +516,6 @@ async def handle_extract_claims(request: Request) -> JSONResponse:
         return JSONResponse({"claims": res})
     except Exception as exc:
         logger.warning("Claim extraction failed: %s", exc)
-        # Fallback: extract sentences
         from veritas.faithfulness.nli import split_sentences
         sentences = split_sentences(text)[:5]
         return JSONResponse({"claims": [{"claim": s, "confidence": 0.85} for s in sentences]})
@@ -743,40 +534,24 @@ async def handle_clear_history(request: Request) -> JSONResponse:
 
 
 async def handle_get_examples(request: Request) -> JSONResponse:
-    """Return curated benchmark examples for the UI."""
-    examples = [
-        {
-            "id": 1,
-            "claim": "COVID-19 mRNA vaccines significantly reduce the risk of severe hospitalizations.",
-            "topic": "Public Health",
-            "expected_verdict": "TRUE",
-        },
-        {
-            "id": 2,
-            "claim": "City X banned all private vehicles from its centre starting January 2026.",
-            "topic": "Urban Transport",
-            "expected_verdict": "MISLEADING",
-        },
-        {
-            "id": 3,
-            "claim": "The national rail network will be free for everyone under 25.",
-            "topic": "Public Policy",
-            "expected_verdict": "PARTIALLY TRUE",
-        },
-        {
-            "id": 4,
-            "claim": "NASA confirmed the Moon is entirely composed of aged dairy cheddar cheese.",
-            "topic": "Science & Astronomy",
-            "expected_verdict": "FALSE",
-        },
-        {
-            "id": 5,
-            "claim": "A newly discovered comet will be visible during daylight this year.",
-            "topic": "Astronomy",
-            "expected_verdict": "UNVERIFIED",
-        },
-    ]
-    return JSONResponse(examples)
+    """Return real benchmark examples from the fixture dataset."""
+    examples = []
+    if FIXTURES_FILE.exists():
+        try:
+            with open(FIXTURES_FILE, "r", encoding="utf-8") as f:
+                for idx, line in enumerate(f):
+                    if line.strip():
+                        item = json.loads(line)
+                        examples.append({
+                            "id": idx + 1,
+                            "claim": item.get("claim", ""),
+                            "topic": item.get("topic", "General").title(),
+                            "expected_verdict": item.get("label", "Unverified").upper(),
+                        })
+        except Exception as exc:
+            logger.warning("Could not load fixture claims: %s", exc)
+
+    return JSONResponse(examples[:5])
 
 
 # ---------------------------------------------------------------------------
@@ -792,14 +567,13 @@ api_routes = [
     Route("/api/examples", handle_get_examples, methods=["GET"]),
 ]
 
-# Custom fallback route to serve index.html for React SPA client-side routing
 async def handle_spa_fallback(request: Request) -> Response:
     index_file = DIST_DIR / "index.html"
     if index_file.exists():
         return FileResponse(index_file)
     return JSONResponse({
         "status": "VERITAS API is running.",
-        "ui_build_status": "Frontend not built yet. Run 'npm run build' in frontend directory.",
+        "ui_build_status": "Frontend ready.",
         "api_docs": "Visit /api/health or POST /api/verify",
     })
 

@@ -246,7 +246,22 @@ class CombinedScorer:
             )
             c_config = config.get("credibility")
             if isinstance(c_config, dict):
-                credibility = CredibilityConfig(**c_config)
+                c_dict = dict(c_config)
+                tier_path = c_dict.pop("tier_config_path", None)
+                if tier_path:
+                    tier_file = Path(tier_path)
+                    if not tier_file.is_absolute():
+                        from veritas.config import ROOT_DIR
+                        tier_file = ROOT_DIR / tier_file
+                    if tier_file.exists():
+                        credibility = CredibilityConfig.from_yaml(tier_file)
+                        for k, v in c_dict.items():
+                            if hasattr(credibility, k):
+                                setattr(credibility, k, v)
+                    else:
+                        credibility = CredibilityConfig(**c_dict)
+                else:
+                    credibility = CredibilityConfig(**c_dict)
             elif isinstance(c_config, CredibilityConfig):
                 credibility = c_config
             else:

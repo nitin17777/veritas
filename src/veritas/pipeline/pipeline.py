@@ -419,6 +419,7 @@ class VeritasPipeline:
                     "rank": item.rank,
                     "score": round(item.score, 6),
                     "sources": list(item.sources),
+                    "text": passage.text if passage and passage.text else "",
                     "text_snippet": (
                         passage.text[:200] if passage and passage.text else ""
                     ),

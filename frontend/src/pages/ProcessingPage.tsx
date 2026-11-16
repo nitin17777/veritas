@@ -58,23 +58,24 @@ export function ProcessingPage({
     };
   }, [claim, claimDate, mode, backend]);
 
-  // Step advancement timer
+  // Step advancement timer - speeds up dynamically if result is already received
   useEffect(() => {
     if (error) return;
+
+    const intervalMs = result ? 280 : 650;
 
     const timer = window.setInterval(() => {
       setStep((currentStep) => {
         if (currentStep < steps.length) {
           return currentStep + 1;
         } else if (result) {
-          // If we reached the end and result is ready, finish
           window.clearInterval(timer);
-          window.setTimeout(() => onDone(result), 400);
+          window.setTimeout(() => onDone(result), 300);
           return currentStep;
         }
         return currentStep;
       });
-    }, 700);
+    }, intervalMs);
 
     return () => window.clearInterval(timer);
   }, [result, error, onDone, steps.length]);
