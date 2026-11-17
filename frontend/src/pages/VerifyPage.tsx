@@ -7,10 +7,13 @@ import { PageHeader } from "../components/PageHeader";
 
 interface VerifyPageProps {
   onStart: (params: { claim: string; claim_date?: string; mode: "benchmark" | "live_search"; backend: "mock" | "local" | "api" }) => void;
+  onResult?: (result: any) => void;
+  onHistory?: () => void;
+  history?: any[];
   settings?: SettingsConfig;
 }
 
-export function VerifyPage({ onStart, settings }: VerifyPageProps) {
+export function VerifyPage({ onStart, onResult, onHistory, history = [], settings }: VerifyPageProps) {
   const [claim, setClaim] = useState("");
   const [examples, setExamples] = useState<ExampleClaim[]>([]);
 
@@ -68,6 +71,48 @@ export function VerifyPage({ onStart, settings }: VerifyPageProps) {
           ))}
         </div>
       </div>
+
+      {history.length > 0 && onResult && (
+        <section className="section" style={{ marginTop: "2rem" }}>
+          <div className="section-heading">
+            <div>
+              <h2>Recent verifications</h2>
+              <p>Quickly revisit your latest checks.</p>
+            </div>
+            {onHistory && (
+              <button className="text-button" onClick={onHistory} type="button">
+                View all <Icon name="arrow" size={15} />
+              </button>
+            )}
+          </div>
+          <div className="recent-list card">
+            {history.slice(0, 3).map((item) => (
+              <div className="recent-row" key={item.id || item.claim}>
+                <div className="claim-cell">
+                  <span className="doc-icon">
+                    <Icon name="file" size={17} />
+                  </span>
+                  <div>
+                    <strong>{item.claim}</strong>
+                    <span>Verified {item.date}</span>
+                  </div>
+                </div>
+                <div className="confidence-mini">
+                  <strong>{item.confidence}%</strong>
+                  <span>Confidence</span>
+                </div>
+                <button
+                  className="row-action"
+                  onClick={() => onResult(item.result)}
+                  type="button"
+                >
+                  View details <Icon name="arrow" size={15} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

@@ -1,5 +1,123 @@
 [
   {
+    "id": "veritas_287546413",
+    "claim": "Sanjay Dutt was a criminal",
+    "verdict": "FALSE",
+    "confidence": 92,
+    "date": "November 17, 2026",
+    "evidence": 4,
+    "result": {
+      "id": "veritas_287546413",
+      "claim": "Sanjay Dutt was a criminal",
+      "verdict": "FALSE",
+      "confidence": 92,
+      "explanation": "This claim is contradicted by official findings in [live_web_4_theprint_in] [E1]. The evidence clarifies: \"In his gangster roles in movies,SanjayDuttmade us believe he would not have been acriminalhad circumstances been different.SanjayDuttis among my favourite badass actors in Bollywood - especially when he plays a gangster....\"",
+      "evidence_cards": [
+        {
+          "id": "E1",
+          "passage_id": "live_web_1_etnownews_com",
+          "source": "Etnownews",
+          "domain": "etnownews.com",
+          "date": "Date unspecified",
+          "tier": "Tier 3: Mainstream / General",
+          "stance": "Provides context",
+          "quote": "Sanjay Dutt recalls 1993 arms case, admits ignoring his instincts before keeping AK-56 rifle: ‘The mistakes were mine’ - Entertainment | ET Now Live Latest Market Overview Market Overview Market News",
+          "relevance": 80,
+          "credibility": 50,
+          "temporal": 50,
+          "combined": 68,
+          "is_cited": false,
+          "url": "https://www.etnownews.com/entertainment/sanjay-dutt-recalls-1993-arms-case-admits-ignoring-his-instincts-before-keeping-ak-56-rifle-the-mistakes-were-mine-article-156314395"
+        },
+        {
+          "id": "E2",
+          "passage_id": "live_web_2_news18_com",
+          "source": "News18",
+          "domain": "news18.com",
+          "date": "Date unspecified",
+          "tier": "Tier 3: Mainstream / General",
+          "stance": "Provides context",
+          "quote": "Sanjay Dutt Breaks Silence On 1993 Case, Says He Was Convicted Despite ‘No Gun Being Found’ | Bollywood News - News18 English Edition हिन्दी (Hindi) বাংলা (Bengali) मराठी (Marathi) ગુજરાતી (Gujarati)",
+          "relevance": 50,
+          "credibility": 50,
+          "temporal": 50,
+          "combined": 50,
+          "is_cited": false,
+          "url": "https://www.news18.com/movies/bollywood/sanjay-dutt-breaks-silence-on-1993-case-says-he-was-convicted-despite-no-gun-being-found-ws-l-9745985.html"
+        },
+        {
+          "id": "E3",
+          "passage_id": "live_web_3_en_wikipedia_org",
+          "source": "En",
+          "domain": "en.wikipedia.org",
+          "date": "Date unspecified",
+          "tier": "Tier 3: Mainstream / General",
+          "stance": "Provides context",
+          "quote": "Sanjay Dutt - Wikipedia Jump to content Main menu Main menu move to sidebar hide Navigation Main page Contents Current events Random article About Wikipedia Contact us Contribute Help Learn to edit Co",
+          "relevance": 40,
+          "credibility": 50,
+          "temporal": 50,
+          "combined": 44,
+          "is_cited": false,
+          "url": "https://en.wikipedia.org/wiki/Sanjay_Dutt"
+        },
+        {
+          "id": "E4",
+          "passage_id": "live_web_4_theprint_in",
+          "source": "Theprint",
+          "domain": "theprint.in",
+          "date": "Date unspecified",
+          "tier": "Tier 3: Mainstream / General",
+          "stance": "Contradicts claim",
+          "quote": "In his gangster roles in movies,SanjayDuttmade us believe he would not have been acriminalhad circumstances been different.SanjayDuttis among my favourite badass actors in Bollywood - especially when",
+          "relevance": 35,
+          "credibility": 50,
+          "temporal": 50,
+          "combined": 41,
+          "is_cited": true,
+          "url": "https://theprint.in/opinion/sanju-is-no-saint-he-is-a-convicted-criminal-caught-with-ak-56/76965/"
+        }
+      ],
+      "source_mode": "Live Web Search",
+      "abstained": false,
+      "abstention_reasons": [],
+      "faithfulness_score": 100,
+      "is_supported": false,
+      "nli_status": "Passed",
+      "evidence_scoring": {
+        "relevance": 51,
+        "credibility": 50,
+        "temporal": 50,
+        "combined": 51,
+        "formula": "0.60 × Rel. + 0.25 × Cred. + 0.15 × Temp."
+      },
+      "pipeline_stages": [
+        {
+          "name": "Claim extraction",
+          "time_ms": 0
+        },
+        {
+          "name": "Hybrid retrieval",
+          "time_ms": 0
+        },
+        {
+          "name": "Evidence scoring",
+          "time_ms": 2
+        },
+        {
+          "name": "LLM verification",
+          "time_ms": 2
+        },
+        {
+          "name": "NLI faithfulness gate",
+          "time_ms": 0
+        }
+      ],
+      "completed_at": "November 17, 2026 at 10:46 AM",
+      "disclaimer": "VERITAS assists human judgment and does not guarantee factual correctness."
+    }
+  },
+  {
     "id": "veritas_123700222",
     "claim": "bihar is in india",
     "verdict": "TRUE",

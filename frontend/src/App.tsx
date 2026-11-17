@@ -3,7 +3,7 @@ import type { HistoryItem, Page, SettingsConfig, VerificationResult } from "./ty
 import { clearHistory, getHistory } from "./api";
 import { Sidebar } from "./components/Sidebar";
 import { HistoryPage } from "./pages/HistoryPage";
-import { OverviewPage } from "./pages/OverviewPage";
+import { LandingPage } from "./pages/LandingPage";
 import { ProcessingPage } from "./pages/ProcessingPage";
 import { ResearchPage } from "./pages/ResearchPage";
 import { ResultsPage } from "./pages/ResultsPage";
@@ -35,7 +35,7 @@ function getSavedSettings(): SettingsConfig {
 }
 
 export default function App() {
-  const [page, setPage] = useState<Page>("overview");
+  const [page, setPage] = useState<Page>("landing");
   const [claimToVerify, setClaimToVerify] = useState<string>("City X banned all private vehicles from its centre starting January 2026.");
   const [claimDate, setClaimDate] = useState<string | undefined>();
   const [verifyMode, setVerifyMode] = useState<"benchmark" | "live_search">("benchmark");
@@ -124,72 +124,74 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <Sidebar page={page} setPage={navigate} settings={settings} />
+      {/* Landing page — full screen, no sidebar */}
+      {page === "landing" && (
+        <LandingPage onEnter={() => navigate("verify")} />
+      )}
 
-      <div className="main-shell">
-        {page === "overview" && (
-          <OverviewPage
-            onStart={handleStartVerification}
-            onResult={handleViewResult}
-            onHistory={() => navigate("history")}
-            onResearch={() => navigate("research")}
-            history={history}
-            settings={settings}
-          />
-        )}
+      {/* App shell with sidebar — all non-landing pages */}
+      {page !== "landing" && (
+        <>
+          <Sidebar page={page} setPage={navigate} settings={settings} />
 
-        {page === "verify" && (
-          <VerifyPage
-            onStart={handleStartVerification}
-            settings={settings}
-          />
-        )}
+          <div className="main-shell">
+            {page === "verify" && (
+              <VerifyPage
+                onStart={handleStartVerification}
+                onResult={handleViewResult}
+                onHistory={() => navigate("history")}
+                history={history}
+                settings={settings}
+              />
+            )}
 
-        {page === "processing" && (
-          <ProcessingPage
-            claim={claimToVerify}
-            claimDate={claimDate}
-            mode={verifyMode}
-            backend={verifyBackend}
-            onDone={handleVerificationDone}
-            onError={handleVerificationError}
-          />
-        )}
+            {page === "processing" && (
+              <ProcessingPage
+                claim={claimToVerify}
+                claimDate={claimDate}
+                mode={verifyMode}
+                backend={verifyBackend}
+                onDone={handleVerificationDone}
+                onError={handleVerificationError}
+              />
+            )}
 
-        {page === "results" && currentResult && (
-          <ResultsPage result={currentResult} />
-        )}
+            {page === "results" && currentResult && (
+              <ResultsPage result={currentResult} />
+            )}
 
-        {page === "results" && !currentResult && (
-          <div className="page" style={{ padding: "3rem", textAlign: "center" }}>
-            <h2>No verification selected</h2>
-            <p style={{ color: "var(--muted)", margin: "1rem 0" }}>
-              Please verify a new claim or choose one from your history.
-            </p>
-            <button className="btn btn-primary" onClick={() => navigate("verify")} type="button">
-              Verify a claim
-            </button>
+            {page === "results" && !currentResult && (
+              <div className="page" style={{ padding: "3rem", textAlign: "center" }}>
+                <h2>No verification selected</h2>
+                <p style={{ color: "var(--muted)", margin: "1rem 0" }}>
+                  Please verify a new claim or choose one from your history.
+                </p>
+                <button className="btn btn-primary" onClick={() => navigate("verify")} type="button">
+                  Verify a claim
+                </button>
+              </div>
+            )}
+
+            {page === "history" && (
+              <HistoryPage
+                history={history}
+                onResult={handleViewResult}
+                onNew={() => navigate("verify")}
+                onClear={handleClearHistory}
+              />
+            )}
+
+            {page === "research" && <ResearchPage />}
+
+            {page === "settings" && (
+              <SettingsPage
+                settings={settings}
+                onUpdateSettings={updateSettings}
+              />
+            )}
           </div>
-        )}
-
-        {page === "history" && (
-          <HistoryPage
-            history={history}
-            onResult={handleViewResult}
-            onNew={() => navigate("verify")}
-            onClear={handleClearHistory}
-          />
-        )}
-
-        {page === "research" && <ResearchPage />}
-
-        {page === "settings" && (
-          <SettingsPage
-            settings={settings}
-            onUpdateSettings={updateSettings}
-          />
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
 }

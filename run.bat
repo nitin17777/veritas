@@ -23,11 +23,8 @@ if not exist "frontend\dist\index.html" (
 )
 
 echo.
-echo [2/2] Launching Starlette / Uvicorn server on http://localhost:8000 ...
-echo The React application and REST API are both served at:
-echo    http://localhost:8000
+echo [2/2] Launching server & opening browser at http://localhost:8000 ...
 echo.
-echo Press Ctrl+C to stop the server.
-echo.
+start "" http://localhost:8000
 
 .\.venv\Scripts\python.exe -m uvicorn app.api_server:app --host 0.0.0.0 --port 8000

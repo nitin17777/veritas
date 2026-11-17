@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-export type Page = "overview" | "verify" | "processing" | "results" | "history" | "research" | "settings";
+export type Page = "landing" | "verify" | "processing" | "results" | "history" | "research" | "settings";
 
 export type Verdict = "TRUE" | "PARTIALLY TRUE" | "MISLEADING" | "FALSE" | "UNVERIFIED";
 

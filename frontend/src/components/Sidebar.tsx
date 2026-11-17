@@ -10,7 +10,6 @@ interface SidebarProps {
 
 export function Sidebar({ page, setPage, settings }: { page: Page; setPage: (p: Page) => void; settings?: SettingsConfig }) {
   const links: { id: Page; label: string; icon: string }[] = [
-    { id: "overview", label: "Overview", icon: "overview" },
     { id: "verify", label: "Verify a claim", icon: "verify" },
     { id: "history", label: "Verification history", icon: "history" },
     { id: "research", label: "Research / About", icon: "research" },
@@ -30,7 +29,23 @@ export function Sidebar({ page, setPage, settings }: { page: Page; setPage: (p: 
   return (
     <aside className="sidebar">
       <div className="sidebar-top">
-        <Logo />
+        <button
+          className="logo sidebar-home-btn"
+          onClick={() => setPage("landing")}
+          type="button"
+          title="Go to home page"
+          style={{ cursor: "pointer", border: 0, background: "transparent", textAlign: "left", width: "100%", padding: 0 }}
+        >
+          <button
+          className="logo sidebar-home-btn"
+          onClick={() => setPage("landing")}
+          type="button"
+          title="Go to home page"
+          style={{ cursor: "pointer", border: 0, background: "transparent", textAlign: "left", width: "100%", padding: 0 }}
+        >
+          <Logo onClick={() => setPage("landing")} />
+        </button>
+        </button>
         <nav aria-label="Primary navigation">
           <span className="nav-label">Workspace</span>
           {links.map((link) => (
