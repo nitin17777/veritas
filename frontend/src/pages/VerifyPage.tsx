@@ -6,7 +6,7 @@ import { Icon } from "../components/Icons";
 import { PageHeader } from "../components/PageHeader";
 
 interface VerifyPageProps {
-  onStart: (params: { claim: string; claim_date?: string; mode: "benchmark" | "live_search"; backend: "mock" | "local" | "api" }) => void;
+  onStart: (params: { claim: string; claim_date?: string; mode: "benchmark" | "live_search"; backend: "mock" | "api" }) => void;
   onResult?: (result: any) => void;
   onHistory?: () => void;
   history?: any[];

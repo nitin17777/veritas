@@ -6,7 +6,7 @@ export async function verifyClaim(params: {
   claim: string;
   claim_date?: string;
   mode?: "benchmark" | "live_search";
-  backend?: "mock" | "local" | "api";
+  backend?: "mock" | "api";
 }): Promise<VerificationResult> {
   const res = await fetch(`${API_BASE}/api/verify`, {
     method: "POST",

@@ -1,5 +1,139 @@
 [
   {
+    "id": "veritas_760714364",
+    "claim": "Modi is god",
+    "verdict": "FALSE",
+    "confidence": 92,
+    "date": "November 18, 2026",
+    "evidence": 5,
+    "result": {
+      "id": "veritas_760714364",
+      "claim": "Modi is god",
+      "verdict": "FALSE",
+      "confidence": 92,
+      "explanation": "This claim is contradicted by official findings in [live_web_1_thediplomat_com] [E1]. The evidence clarifies: \"Prime Minister Modi’s God Complex – The Diplomat All Sections Search Read The Diplomat , Know The Asia-Pacific Central Asia East Asia Oceania South Asia Southeast Asia | Security Politics Diplomacy Economy Society Enviro...\"",
+      "evidence_cards": [
+        {
+          "id": "E1",
+          "passage_id": "live_web_1_thediplomat_com",
+          "source": "Thediplomat",
+          "domain": "thediplomat.com",
+          "date": "Date unspecified",
+          "tier": "Tier 3: Mainstream / General",
+          "stance": "Contradicts claim",
+          "quote": "Prime Minister Modi’s God Complex – The Diplomat All Sections Search Read The Diplomat , Know The Asia-Pacific Central Asia East Asia Oceania South Asia Southeast Asia | Security Politics Diplomacy Ec",
+          "relevance": 80,
+          "credibility": 50,
+          "temporal": 50,
+          "combined": 68,
+          "is_cited": true,
+          "url": "https://thediplomat.com/2024/05/prime-minister-modis-god-complex/"
+        },
+        {
+          "id": "E2",
+          "passage_id": "live_web_2_theguardian_com",
+          "source": "Theguardian",
+          "domain": "theguardian.com",
+          "date": "Date unspecified",
+          "tier": "Tier 2: Established News",
+          "stance": "Provides context",
+          "quote": "India elections: PM Narendra Modi claims he has been chosen by God | India | The Guardian Skip to main content Skip to navigation Close dialogue 1 / 1 Next image Previous image Toggle caption Print su",
+          "relevance": 56,
+          "credibility": 75,
+          "temporal": 50,
+          "combined": 60,
+          "is_cited": false,
+          "url": "https://www.theguardian.com/world/article/2024/may/27/india-elections-pm-narendra-modi-claims-he-has-been-chosen-by-god"
+        },
+        {
+          "id": "E3",
+          "passage_id": "live_web_3_maheshbaby_blogs",
+          "source": "Maheshbaby",
+          "domain": "maheshbaby.blogspot.com",
+          "date": "Date unspecified",
+          "tier": "Tier 3: Mainstream / General",
+          "stance": "Provides context",
+          "quote": "Is PM Modi an Avatar of God? Home About Us Contact Us Disclaimer Privacy Policy Terms and Conditions Home Bhakt modi worship Is PM Modi an Avatar of God? Is PM Modi an Avatar of God? Maheshbaby Octobe",
+          "relevance": 40,
+          "credibility": 50,
+          "temporal": 50,
+          "combined": 44,
+          "is_cited": false,
+          "url": "https://maheshbaby.blogspot.com/2025/10/is-pm-modi-avatar-of-god.html"
+        },
+        {
+          "id": "E4",
+          "passage_id": "live_web_4_cnn_com",
+          "source": "Cnn",
+          "domain": "cnn.com",
+          "date": "Date unspecified",
+          "tier": "Tier 3: Mainstream / General",
+          "stance": "Provides context",
+          "quote": "Indian PM Modi’s latest campaign message to supporters: ‘God has sent me’ | CNN @font-face { font-family: \"cnn_sans_condensed\"; font-weight: 700; src: url(/fonts/cnn/cnn_sans_condensed-bold.woff2); }",
+          "relevance": 35,
+          "credibility": 50,
+          "temporal": 50,
+          "combined": 41,
+          "is_cited": false,
+          "url": "https://www.cnn.com/2024/05/28/india/india-narendra-modi-chosen-by-god-intl-hnk/"
+        },
+        {
+          "id": "E5",
+          "passage_id": "live_web_5_modimandir_org",
+          "source": "Modimandir",
+          "domain": "modimandir.org",
+          "date": "Date unspecified",
+          "tier": "Tier 3: Mainstream / General",
+          "stance": "Provides context",
+          "quote": "Bhagwan Modi? Why Some Call Narendra Modi a God, and His Reply Modi Mandir Home Articles Topics News Timeline Tools FAQs About Contact Home > Politics and Reaction > Bhagwan Modi? Why Some Call Narend",
+          "relevance": 32,
+          "credibility": 50,
+          "temporal": 50,
+          "combined": 39,
+          "is_cited": false,
+          "url": "https://modimandir.org/blog/bhagwan-modi-why-some-call-narendra-modi-god"
+        }
+      ],
+      "source_mode": "Live Web Search",
+      "abstained": false,
+      "abstention_reasons": [],
+      "faithfulness_score": 100,
+      "is_supported": false,
+      "nli_status": "Passed",
+      "evidence_scoring": {
+        "relevance": 49,
+        "credibility": 55,
+        "temporal": 50,
+        "combined": 51,
+        "formula": "0.60 × Rel. + 0.25 × Cred. + 0.15 × Temp."
+      },
+      "pipeline_stages": [
+        {
+          "name": "Claim extraction",
+          "time_ms": 0
+        },
+        {
+          "name": "Hybrid retrieval",
+          "time_ms": 0
+        },
+        {
+          "name": "Evidence scoring",
+          "time_ms": 3
+        },
+        {
+          "name": "LLM verification",
+          "time_ms": 2
+        },
+        {
+          "name": "NLI faithfulness gate",
+          "time_ms": 0
+        }
+      ],
+      "completed_at": "November 18, 2026 at 05:32 AM",
+      "disclaimer": "VERITAS assists human judgment and does not guarantee factual correctness."
+    }
+  },
+  {
     "id": "veritas_287546413",
     "claim": "Sanjay Dutt was a criminal",
     "verdict": "FALSE",

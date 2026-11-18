@@ -247,10 +247,9 @@ export function SettingsPage({ settings, onUpdateSettings }: SettingsPageProps) 
                 <div className="select-wrap" style={{ minWidth: "180px" }}>
                   <select
                     value={settings.backend}
-                    onChange={(e) => onUpdateSettings({ backend: e.target.value as "mock" | "local" | "api" })}
+                    onChange={(e) => onUpdateSettings({ backend: e.target.value as "mock" | "api" })}
                   >
                     <option value="mock">Mock Engine (Fast)</option>
-                    <option value="local">Local Ollama (Qwen2.5)</option>
                     <option value="api">OpenAI (GPT-4o-mini)</option>
                   </select>
                   <Icon name="chevron" size={15} />

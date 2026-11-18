@@ -296,24 +296,10 @@ st.markdown(
 
 
 @st.cache_resource(show_spinner=False)
-def get_engine(backend: str = "local") -> VeritasDemoEngine:
+def get_engine(backend: str = "mock") -> VeritasDemoEngine:
     """Initialize and cache the VERITAS demo verification engine."""
     llm_client = None
-    if backend == "local":
-        try:
-            from veritas.verification.llm_client import APILLMClient
-
-            llm_client = APILLMClient(
-                model_name="qwen2.5:7b",
-                api_base="http://localhost:11434/v1",
-                api_key="ollama",
-                provider="openai",
-                timeout=60.0,
-            )
-        except Exception as exc:
-            logger.warning("Local Ollama client init failed: %s; falling back to mock", exc)
-            llm_client = None
-    elif backend == "api":
+    if backend == "api":
         try:
             from veritas.verification.llm_client import APILLMClient
 
@@ -334,7 +320,7 @@ def cached_verify_claim(
     claim: str,
     claim_date: str | None,
     mode: str,
-    backend: str = "local",
+    backend: str = "mock",
 ) -> dict:
     """Cache verification results for repeated identical queries."""
     engine = get_engine(backend=backend)
@@ -400,16 +386,15 @@ with st.sidebar:
     st.markdown("### Checking model")
     model_backend_choice = st.selectbox(
         "Verification Model",
-        options=["local (Ollama qwen2.5:7b)", "mock (offline canned)", "api (OpenAI / Anthropic)"],
+        options=["mock (offline canned)", "api (OpenAI / Anthropic)"],
         index=0,
         label_visibility="collapsed",
         help=(
-            "local: Uses local Ollama qwen2.5:7b (free, private, intelligent). "
             "mock: offline deterministic verifier (zero API cost). "
             "api: OpenAI / Anthropic cloud model."
         ),
     )
-    backend_key = "local" if "local" in model_backend_choice else ("api" if "api" in model_backend_choice else "mock")
+    backend_key = "api" if "api" in model_backend_choice else "mock"
     model_backend = backend_key
 
     st.markdown("### Safety checks")

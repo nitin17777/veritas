@@ -174,21 +174,7 @@ def get_engine(backend: str = "mock") -> VeritasDemoEngine:
     eff_backend = backend.lower() if backend else "mock"
     if eff_backend not in _ENGINES:
         llm_client = None
-        if eff_backend == "local":
-            try:
-                from veritas.verification.llm_client import APILLMClient
-
-                llm_client = APILLMClient(
-                    model_name="qwen2.5:7b",
-                    api_base="http://localhost:11434/v1",
-                    api_key="ollama",
-                    provider="openai",
-                    timeout=60.0,
-                )
-            except Exception as exc:
-                logger.warning("Local Ollama client init failed: %s; falling back to dynamic mock", exc)
-                llm_client = None
-        elif eff_backend == "api":
+        if eff_backend == "api":
             try:
                 from veritas.verification.llm_client import APILLMClient
 
@@ -456,7 +442,7 @@ async def handle_health(request: Request) -> JSONResponse:
         "status": "healthy",
         "system": "VERITAS",
         "version": "1.4.0",
-        "backends": ["mock", "local", "api"],
+        "backends": ["mock", "api"],
         "default_backend": "mock",
         "modes": ["benchmark", "live_search"],
         "default_mode": "benchmark",

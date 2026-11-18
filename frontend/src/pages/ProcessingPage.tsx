@@ -7,7 +7,7 @@ interface ProcessingPageProps {
   claim: string;
   claimDate?: string;
   mode: "benchmark" | "live_search";
-  backend: "mock" | "local" | "api";
+  backend: "mock" | "api";
   onDone: (result: VerificationResult) => void;
   onError: (errMsg: string) => void;
 }

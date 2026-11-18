@@ -28,7 +28,11 @@ function getSavedSettings(): SettingsConfig {
   try {
     const raw = localStorage.getItem("veritas_settings");
     if (raw) {
-      return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+      const parsed = JSON.parse(raw);
+      if (parsed.backend === "local") {
+        parsed.backend = "mock";
+      }
+      return { ...DEFAULT_SETTINGS, ...parsed };
     }
   } catch {}
   return DEFAULT_SETTINGS;
@@ -39,7 +43,7 @@ export default function App() {
   const [claimToVerify, setClaimToVerify] = useState<string>("City X banned all private vehicles from its centre starting January 2026.");
   const [claimDate, setClaimDate] = useState<string | undefined>();
   const [verifyMode, setVerifyMode] = useState<"benchmark" | "live_search">("benchmark");
-  const [verifyBackend, setVerifyBackend] = useState<"mock" | "local" | "api">("mock");
+  const [verifyBackend, setVerifyBackend] = useState<"mock" | "api">("mock");
   const [currentResult, setCurrentResult] = useState<VerificationResult | null>(null);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [settings, setSettings] = useState<SettingsConfig>(getSavedSettings);
@@ -86,7 +90,7 @@ export default function App() {
     claim: string;
     claim_date?: string;
     mode: "benchmark" | "live_search";
-    backend: "mock" | "local" | "api";
+    backend: "mock" | "api";
   }) => {
     setClaimToVerify(params.claim);
     setClaimDate(params.claim_date);

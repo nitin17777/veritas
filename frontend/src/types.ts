@@ -73,7 +73,7 @@ export interface ExampleClaim {
 export interface SettingsConfig {
   theme: "Light" | "System" | "Dark";
   sourceMode: "benchmark" | "live_search";
-  backend: "mock" | "local" | "api";
+  backend: "mock" | "api";
   includeCredibility: boolean;
   prioritizeRecent: boolean;
   detailedView: boolean;

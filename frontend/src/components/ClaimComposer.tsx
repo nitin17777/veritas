@@ -4,10 +4,10 @@ import { Icon } from "./Icons";
 interface ClaimComposerProps {
   value: string;
   setValue: (v: string) => void;
-  onVerify: (params: { claim: string; claim_date?: string; mode: "benchmark" | "live_search"; backend: "mock" | "local" | "api" }) => void;
+  onVerify: (params: { claim: string; claim_date?: string; mode: "benchmark" | "live_search"; backend: "mock" | "api" }) => void;
   expanded?: boolean;
   defaultMode?: "benchmark" | "live_search";
-  defaultBackend?: "mock" | "local" | "api";
+  defaultBackend?: "mock" | "api";
 }
 
 export function ClaimComposer({
@@ -21,7 +21,7 @@ export function ClaimComposer({
   const [inputType, setInputType] = useState<"claim" | "article">("claim");
   const [claimDate, setClaimDate] = useState<string>("");
   const [mode, setMode] = useState<"benchmark" | "live_search">(defaultMode);
-  const [backend, setBackend] = useState<"mock" | "local" | "api">(defaultBackend);
+  const [backend, setBackend] = useState<"mock" | "api">(defaultBackend);
 
   const handleSubmit = () => {
     if (!value.trim()) return;
@@ -120,11 +120,10 @@ export function ClaimComposer({
             <div className="select-wrap" style={{ width: "100%", marginTop: "0.25rem" }}>
               <select
                 value={backend}
-                onChange={(e) => setBackend(e.target.value as "mock" | "local" | "api")}
+                onChange={(e) => setBackend(e.target.value as "mock" | "api")}
                 style={{ width: "100%", padding: "0.45rem 2rem 0.45rem 0.75rem", borderRadius: "8px" }}
               >
                 <option value="mock">Mock Engine (Deterministic / Fast)</option>
-                <option value="local">Local Ollama (Qwen2.5:7b)</option>
                 <option value="api">OpenAI API (GPT-4o-mini)</option>
               </select>
               <Icon name="chevron" size={15} />
